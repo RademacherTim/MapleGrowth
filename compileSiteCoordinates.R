@@ -39,11 +39,13 @@ siteMetaData <- tibble (
   lat = ITRDBcoordinates$latitude, # site latitude (decimal degrees)
   lon = ITRDBcoordinates$longitude, # site longitude (decimal degrees)
   ele = ITRDBcoordinates$elevation, # site elevation (m)
-  start = as_date (paste0 (as.character (ITRDBcoordinates$start.date),'-01-01'), format = '%Y-%m-%d'), # start date of growth data
-  end = as_date (paste0 (as.character (ITRDBcoordinates$end.date),'-12-31')) # end date of growth data
+  eleClim = NA, # elevation of the grid cell for the climate data 
+  start = ITRDBcoordinates$start.date, # start year of growth data
+  startClim = NA, # start year of climate data
+  end = ITRDBcoordinates$end.date, # end year of growth data
+  endClim = NA # end year of climate data
 )
-# does it make sense to use first of Jan and 31st of Dec as dates here? 
-# Need to think about this, as growing season is never the entire year.
+siteMetaData <- tibble::rowid_to_column (siteMetaData, "site")
 
 # add other coordinates for multiple data types
 #-------------------------------------------------------------------------------
@@ -58,17 +60,17 @@ siteMetaData <- tibble (
 # get shapefile for red and sugar maple distributions from US Forest service
 #-------------------------------------------------------------------------------
 disACRU <- st_read  ('../data/distribution/little1991/ACRU/litt316av.shp',
-                     stringsAsFactors = FALSE)
+                     stringsAsFactors = FALSE, quiet = TRUE)
 disACSH <- st_read  ('../data/distribution/little1991/ACSH/litt318av.shp',
-                     stringsAsFactors = FALSE)
+                     stringsAsFactors = FALSE, quiet = TRUE)
 
 # set the coordinate system to Albers equal area projection with US Forest 
 # Service parameters from https://www.fs.fed.us/nrs/atlas/littlefia/albers_prj.txt
 #-------------------------------------------------------------------------------
-st_crs (disACRU) <- 
+USFS_CRS <- 
   '+proj=aea +lat_1=38.0 +lat_2=42.0 +lat_0=40.0 +lon_0=-82.0 +x_0=0 +y_0=0'
-st_crs (disACSH) <- 
-  '+proj=aea +lat_1=38.0 +lat_2=42.0 +lat_0=40.0 +lon_0=-82.0 +x_0=0 +y_0=0'
+st_crs (disACRU) <- USFS_CRS
+st_crs (disACSH) <- USFS_CRS
 
 # convert coordinate system to WGS84
 #-------------------------------------------------------------------------------
