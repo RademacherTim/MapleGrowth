@@ -190,10 +190,12 @@ extractClimate <- function (s) { # s = site index
     
     # delete unnecessary variables
     #---------------------------------------------------------------------------
-    #rm (ea, es, rh, prcp, pres, tas, tmax, tmin, vpd, wind, 
-    #    nc_prcp, nc_pres, nc_shum, nc_tas, nc_tmax, nc_tmin, nc_wind, fillValue,
-    #    fileNamePrcp, fileNamePres, fileNameShum, fileNameTas, fileNameTmax, 
-    #    fileNameTmin, fileNameWind)
+    rm (ea, es, rh, shum, prcp, pres, tas, vpd, #tmax, tmin, wind, 
+        nc_prcp, nc_pres, nc_shum, nc_tas, #nc_tmax, nc_tmin, nc_wind, 
+        fillValue,
+        fileNamePrcp, fileNamePres, fileNameShum, fileNameTas, 
+        #fileNameTmax, fileNameTmin, fileNameWind
+    )
     
   } # end of annual loop
 
@@ -224,23 +226,65 @@ getWeeklySummaries <- function (clm) {
   
   # summarise individual climate variables
   #-----------------------------------------------------------------------------
-   weeklyClimate <- clm %>%  
+  weeklyClimate <- clm %>%  
     mutate (year = lubridate::year (date), 
             week = lubridate::week (date)) %>% 
     group_by (year, week, var) %>% 
-    summarise (date = mean (date, na.rm = TRUE),
-               rh   = mean (rh,   na.rm = TRUE),
-               prcp = sum  (prcp, na.rm = TRUE),
-               tas  = mean (tas,  na.rm = TRUE),
-               #tmax = max  (tmax, na.rm = TRUE),
-               #tmin = min  (tmin, na.rm = TRUE),
-               vpd  = mean (vpd,  na.rm = TRUE),
-               #wind = mean (wind, na.rm = TRUE), 
+    summarise (date = mean (date,  na.rm = TRUE),
+               mean = mean (value, na.rm = TRUE),
+               sum  = sum  (value, na.rm = TRUE), 
                .groups = 'drop')
-  
+   
+  # deselect all variables that are not useful
+  #-----------------------------------------------------------------------------
+  weeklyClimate <- weeklyClimate %>% 
+    filter (var %in% c ('prcp','rh','tas','vpd')) %>%
+    mutate (value = ifelse (var == 'prcp', sum, mean)) %>%
+    dplyr::select (year, week, var, date, value)
+    
   # return climate summarise by week
   #-----------------------------------------------------------------------------
   return (weeklyClimate)
+}
+
+# create function to summarise monthly climatologies
+#-------------------------------------------------------------------------------
+getMonthlySummaries <- function (clm) {
+  
+  # derive monthly climate variables in long format
+  #-----------------------------------------------------------------------------
+  # year
+  # month
+  #  rh   = NA, # monthly mean relative humidity                (%)
+  #  prcp = NA, # monthly total precipitation                   (mm w-1)
+  #  tas  = NA, # monthly mean air temperature at the surface   (deg C)
+  #  tmax = NA, # monthly maximum temperature of daily maximums (deg C)
+  #  tmin = NA, # monthly minimum temperature daily minimums    (deg C)
+  #  vpd  = NA, # monthly mean vapour pressure deficit          (kPa)
+  #  wind = NA  # monthly mean wind speed                       (m s-1)
+  #)
+  
+  # summarise individual climate variables
+  #-----------------------------------------------------------------------------
+  monthlyClimate <- clm %>%  
+    mutate (year  = lubridate::year  (date), 
+            month = lubridate::month (date)) %>% 
+    group_by (year, month, var) %>% 
+    summarise (date = mean (date,  na.rm = TRUE),
+               mean = mean (value, na.rm = TRUE),
+               sum  = sum  (value, na.rm = TRUE), 
+               .groups = 'drop')
+  
+  # deselect all variables that are not useful
+  #-----------------------------------------------------------------------------
+  monthlyClimate <- monthlyClimate %>% 
+    filter (var %in% c ('prcp','rh','tas','vpd')) %>%
+    mutate (value = ifelse (var == 'prcp', sum, mean)) %>%
+    dplyr::select (year, month, var, value)
+  
+  # return climate summarise by month
+  #-----------------------------------------------------------------------------
+  return (monthlyClimate)
 }
 
 #===============================================================================

@@ -4,13 +4,11 @@
 
 # load dependencies
 #-------------------------------------------------------------------------------
-library ('raster')
-library ('rgdal')
-library ('RSQLite')
+library ('ncdf4')
 
 # get soil and topographic data from the Harmonized World Soil Database 
 #-------------------------------------------------------------------------------
-hwsd <- raster ("../data/soils/HWSD_RASTER/hwsd.bil")
+hwsd <- nc_open ("../data/soils/HWSD_1247/data/")
 
 # add projection information (i.e., Plate Carrée using WGS84 datum according to 
 # documentation) to HWSD

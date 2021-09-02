@@ -14,38 +14,44 @@ library ('mapdata')
 library ('maptools')
 library ('broom')
 library ('sf')
-library ('rnaturalearth')
-library ('rnaturalearthdata')
+#library ('rnaturalearth')
+#library ('rnaturalearthdata')
 library ('lubridate')
+library ('readxl')
+library ('tiff')
 
-# read ITRDB coordinates
+# read ITRDB coordinates and metadata
 #-------------------------------------------------------------------------------
-ITRDBcoordinates <- read_csv (
-  file = '../data/growth/chronologyData/ITRDB_cleaned_Zhao2019/coordinate.csv',
-  col_types = cols ())
+# ITRDBcoordinates <- read_csv (
+#   file = '../data/growth/chronologyData/ITRDB_cleaned_Zhao2019/coordinate.csv',
+#   col_types = cols ())
+# ITRDBmetadata <- read_csv (
+#   file = '../data/growth/chronologyData/ITRDB_cleaned_Zhao2019/rwl_metadata.csv',
+#   col_types = cols ())
 
 # filter out any rows that are not maple species
 #-------------------------------------------------------------------------------
-ITRDBcoordinates <- ITRDBcoordinates %>% 
-  filter (substr (speciesCode, 1, 2) == 'AC')
+# ITRDBcoordinates <- ITRDBcoordinates %>% 
+#   filter (substr (speciesCode, 1, 2) == 'AC')
+# ITRDBmetadata <- ITRDBmetadata %>% 
+#   filter (substr (species, 1, 2) == 'AC')
 
-# compile list of all coordinates
+# get coordinates from Neil Pederson's (NP),  David A. Orwig's (DAO), Justin 
+# Timothy Maxwell's (JTM), and Scott Warner's (SW) chronologies
 #-------------------------------------------------------------------------------
-siteMetaData <- tibble (
-  source = 'ITRDB',             # source of growth data 
-  code = ITRDBcoordinates$code, # code for sample site
-  file = ITRDBcoordinates$file, # file with growth data
-  species = ITRDBcoordinates$speciesCode, # maple species at the site
-  lat = ITRDBcoordinates$latitude, # site latitude (decimal degrees)
-  lon = ITRDBcoordinates$longitude, # site longitude (decimal degrees)
-  ele = ITRDBcoordinates$elevation, # site elevation (m)
-  eleClim = NA, # elevation of the grid cell for the climate data 
-  start = ITRDBcoordinates$start.date, # start year of growth data
-  startClim = NA, # start year of climate data
-  end = ITRDBcoordinates$end.date, # end year of growth data
-  endClim = NA # end year of climate data
-)
-siteMetaData <- tibble::rowid_to_column (siteMetaData, "site")
+siteMetaData <- readxl::read_excel (col_names = TRUE, 
+  col_types = c ('numeric','text','text','text','text','numeric',
+                 'numeric','numeric','numeric','numeric','numeric','numeric',
+                 'text','text','text'),
+  path = '../data/growth/chronologyData/siteMetaData.xlsx')
+siteMetaData <- siteMetaData %>% 
+  mutate (colour = ifelse (species == 'ACRU', '#901c3bcc','#f3bd48cc'))
+
+# sum number of cores and trees sampled
+#-------------------------------------------------------------------------------
+nSamples <- siteMetaData %>% select (nTrees, nCores) %>% 
+  summarise (nTrees = sum (nTrees, na.rm = TRUE),
+             nCores = sum (nCores, na.rm = TRUE)) 
 
 # add other coordinates for multiple data types
 #-------------------------------------------------------------------------------
@@ -59,26 +65,33 @@ siteMetaData <- tibble::rowid_to_column (siteMetaData, "site")
 #     - HF microcores
 # get shapefile for red and sugar maple distributions from US Forest service
 #-------------------------------------------------------------------------------
-disACRU <- st_read  ('../data/distribution/little1991/ACRU/litt316av.shp',
-                     stringsAsFactors = FALSE, quiet = TRUE)
-disACSH <- st_read  ('../data/distribution/little1991/ACSH/litt318av.shp',
-                     stringsAsFactors = FALSE, quiet = TRUE)
+disACRU <- sf::st_read  ('../data/distribution/little1991/ACRU/litt316av.shp',
+                         stringsAsFactors = FALSE, quiet = TRUE)
+disACSH <- sf::st_read  ('../data/distribution/little1991/ACSH/litt318av.shp',
+                         stringsAsFactors = FALSE, quiet = TRUE)
 
 # set the coordinate system to Albers equal area projection with US Forest 
 # Service parameters from https://www.fs.fed.us/nrs/atlas/littlefia/albers_prj.txt
 #-------------------------------------------------------------------------------
 USFS_CRS <- 
   '+proj=aea +lat_1=38.0 +lat_2=42.0 +lat_0=40.0 +lon_0=-82.0 +x_0=0 +y_0=0'
-st_crs (disACRU) <- USFS_CRS
-st_crs (disACSH) <- USFS_CRS
+sf::st_crs (disACRU) <- USFS_CRS
+sf::st_crs (disACSH) <- USFS_CRS
 
 # convert coordinate system to WGS84
 #-------------------------------------------------------------------------------
 disACRU_ll <- disACRU %>% 
-  st_transform (crs = "+proj=longlat +ellps=WGS84 +datum=WGS84")
+  sf::st_transform (crs = "+proj=longlat +ellps=WGS84 +datum=WGS84")
+  #st_transform (crs = '+proj=lcc +lon_0=-90 +lat_1=33 +lat_2=45')
 disACSH_ll <- disACSH %>% 
-  st_transform (crs = "+proj=longlat +ellps=WGS84 +datum=WGS84")
+  sf::st_transform (crs = "+proj=longlat +ellps=WGS84 +datum=WGS84")
+  #st_transform (crs = '+proj=lcc +lon_0=-90 +lat_1=33 +lat_2=45')
 
+# Load map biomass map from Beaudoin et al. (2014)
+#-------------------------------------------------------------------------------
+disACRU_be <- readTIFF ('../data/distribution/beaudoin2014/Beaudoin_etal_2014_Acer/NFI_MODIS250m_kNN_Species_Acer_Rub_v0.tif')
+disACRU_be [which (disACRU_be < -1e6)] <- NA
+  
 # get map data for USA and Canada
 #-------------------------------------------------------------------------------
 usa <- map_data ("usa")
@@ -94,14 +107,15 @@ NAmap <- ggplot () +
                 color = "#333333") +  
   geom_polygon (data = canada, aes (x = long, y = lat, group = group), 
                 fill = "white", color = "#333333") +
+  #coord_map ("lambert", lat0 = 33, lat1 = 45) +
   geom_sf (data = disACRU_ll, fill = '#901c3b33', size = 0) +
   geom_sf (data = disACSH_ll, fill = '#f3bd4833', size = 0) +
   xlab ("Longitude") + ylab ("Latitude") +
-  ggtitle('Samples sites and types across North America', 
-          subtitle = 'for growth of maple species') +
+  ggtitle('Samples sites across North America', 
+          subtitle = paste0 ('for growth of ', nSamples$nTrees,' maple trees from ',nSamples$nCores,' cores at ',max (siteMetaData$site),' sites')) +
   geom_point (data = siteMetaData, 
-              aes (x = lon, y = lat, fill = species), 
-             fill = c ('#901c3bcc', rep ('#f3bd48cc', 5)), 
+              aes (x = lon, y = lat, fill = colour), 
+             fill = siteMetaData [['colour']], 
              color = "#444444", shape = 21, size = 2.5) + 
   coord_sf (xlim = c (-98, -50),  ylim = c (26, 55)) +
   theme_minimal (12) #+ theme (legend.position = 'right')
