@@ -18,12 +18,12 @@ siteMetaData <- readxl::read_excel (
                  'text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ('ITRDB','NP'))
+  filter (source %in% c ('ITRDB','NP','JTM'))
 
 # loop over files and load each of them into a tibble
 #-------------------------------------------------------------------------------
 for (i in 1:dim (siteMetaData) [1]) {
-  #i = 7
+  
   # use source to figure out file path
   #-------------------------------------------------------------------------------
   if (siteMetaData$source [i] == 'ITRDB') {
