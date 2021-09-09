@@ -65,7 +65,9 @@ for (i in 1:dim (siteMetaData) [1]) {
   temp <- temp %>% filter (!is.na (rw))
   
   # add site name before adding it to the rwYSTI tibble
-  temp <- temp %>% dplyr::mutate (site = siteMetaData$site [i], .before = tree)
+  temp <- temp %>% dplyr::mutate (site = siteMetaData$site [i], 
+                                  species = siteMetaData$species [i],
+                                  .before = tree)
   
   # initialise tibble 
   if (i == 1) {
@@ -85,4 +87,19 @@ rwYSTI <- rwYSTI %>% mutate (site = as.integer (site),
 # these years
 #-------------------------------------------------------------------------------
 rwYSTI <- rwYSTI %>% filter (year >= 1948 & year <= 2016)
+
+# make histogram of ring widths
+#-------------------------------------------------------------------------------
+png (file = '../fig/ringWidthsHist.png')
+par (mar = c (5, 5, 1, 5)) 
+hist (rwYSTI$rw, main = '', xlab = 'Ring width (mm)', las = 1, axes = FALSE,
+      col = '#AAB30099')
+axis (side = 1, seq (0, 18, 5))
+axis (side = 2, seq (0, 25000, 5000), las = 1)
+par (new = TRUE)
+plot (density (rwYSTI$rw), col = '#445026', lwd = 3, main = '', xlab = '', 
+      ylab = '', axes = FALSE)
+axis (side = 4, seq (0, 0.4, 0.1), las = 1)
+mtext (side = 4, line = 4, text = 'Density')
+dev.off ()
 #===============================================================================
