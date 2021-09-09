@@ -30,7 +30,7 @@ for (i in 1:dim (siteMetaData) [1]) {
     fPath <- '../data/growth/chronologyData/ITRDB_cleaned_Zhao2019/Cleaned datasets/itrdb-v713-cleaned-rwl/usa/'
   } else if (siteMetaData$source [i] == 'NP') {
     fPath <- '../data/growth/chronologyData/NeilPedersonCollection/'
-  } else if (siteMetaData$source == 'JTM') {
+  } else if (siteMetaData$source [i] == 'JTM') {
     fPath <- '../data/growth/chronologyData/JustinMaxwellCollection/'
   }# else if (siteMetaData$source == 'SW') {
   #  fPath <- ''
@@ -76,12 +76,13 @@ for (i in 1:dim (siteMetaData) [1]) {
   } 
 }
 
-# add some data from 
-ISFORTData <- readxl::read_excel (
-  col_names = TRUE, 
-  #col_types = c (),
-  path = '../data/growth/chronologyData/ISFORT/Requête_SYNTHÈSE.xlsx')
-str (ISFORTData)
-forget2007 <- ISFORTData %>% 
-  filter (Esssence == 'ers', 
-          Responsable == 'Éric Forget')
+# make sure year  and site are a integers
+#-------------------------------------------------------------------------------
+rwYSTI <- rwYSTI %>% mutate (site = as.integer (site),
+                             year = as.integer (year))
+
+# delete all data preceeding 1948 or after 2016, as there is no climate data for 
+# these years
+#-------------------------------------------------------------------------------
+rwYSTI <- rwYSTI %>% filter (year >= 1948 & year <= 2016)
+#===============================================================================
