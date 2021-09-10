@@ -88,9 +88,25 @@ rwYSTI <- rwYSTI %>% mutate (site = as.integer (site),
 #-------------------------------------------------------------------------------
 rwYSTI <- rwYSTI %>% filter (year >= 1948 & year <= 2016)
 
-# TR - need to add unique tree and core IDs for simulation to each row
+# add unique tree and core IDs for simulation to each row
 #-------------------------------------------------------------------------------
+rwYSTI <- rwYSTI %>% mutate (treeID = NA, incrementCoreID = NA)
+rwYSTI$treeID <- rwYSTI %>% 
+  group_by (site, tree) %>% 
+  group_indices ()
+max (rwYSTI$treeID)
+rwYSTI$incrementCoreID <- rwYSTI %>% 
+  group_by (site, tree, core) %>% 
+  group_indices ()
+max (rwYSTI$incrementCoreID)
 
+# extract cardinal direction of the core
+#-------------------------------------------------------------------------------
+rwYSTI <- rwYSTI %>% mutate (cardinalDir = NA)
+rwYSTI$core [which (rwYSTI$core %in% c ('n','N'))] <- 'North'
+rwYSTI$core [which (rwYSTI$core %in% c ('e','E'))] <- 'East'
+rwYSTI$core [which (rwYSTI$core %in% c ('s','S'))] <- 'South'
+rwYSTI$core [which (rwYSTI$core %in% c ('w','W'))] <- 'West'
 
 # make histogram of ring widths
 #-------------------------------------------------------------------------------
