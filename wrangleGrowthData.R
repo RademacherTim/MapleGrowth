@@ -88,6 +88,10 @@ rwYSTI <- rwYSTI %>% mutate (site = as.integer (site),
 #-------------------------------------------------------------------------------
 rwYSTI <- rwYSTI %>% filter (year >= 1948 & year <= 2016)
 
+# TR - need to add unique tree and core IDs for simulation to each row
+#-------------------------------------------------------------------------------
+
+
 # make histogram of ring widths
 #-------------------------------------------------------------------------------
 png (file = '../fig/ringWidthsHist.png')
