@@ -47,22 +47,22 @@ for (i in 1:dim (siteMetaData) [1]) {
   # pivot to longer format and add tree and core specifiers depending on format
   if (siteMetaData$labelFormat [i] == 'TT-I') {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = 'rw', names_sep = '-', 
+                          values_to = 'rwYSTI', names_sep = '-', 
                           names_to = c ('tree','core'))
   } else if (siteMetaData$labelFormat [i] %in% c ('SSSTTI','SSSSTTI','SSPPTTI',
                                                   'SSSPPTTI','SSSSSTTI')) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = 'rw', names_sep = c (2,3),
+                          values_to = 'rwYSTI', names_sep = c (2,3),
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ('tree','core'))
   } else if (siteMetaData$labelFormat [i] %in% c ('SSPTTTI','TTTI')) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = 'rw', names_sep = c (3,4),
+                          values_to = 'rwYSTI', names_sep = c (3,4),
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ('tree','core'))
   }
   # delete row without ring width
-  temp <- temp %>% filter (!is.na (rw))
+  temp <- temp %>% filter (!is.na (rwYSTI))
   
   # add site name before adding it to the rwYSTI tibble
   temp <- temp %>% dplyr::mutate (site = siteMetaData$site [i], 
@@ -110,16 +110,18 @@ rwYSTI$core [which (rwYSTI$core %in% c ('w','W'))] <- 'West'
 
 # make histogram of ring widths
 #-------------------------------------------------------------------------------
-png (file = '../fig/ringWidthsHist.png')
-par (mar = c (5, 5, 1, 5)) 
-hist (rwYSTI$rw, main = '', xlab = 'Ring width (mm)', las = 1, axes = FALSE,
-      col = '#AAB30099')
-axis (side = 1, seq (0, 18, 5))
-axis (side = 2, seq (0, 25000, 5000), las = 1)
-par (new = TRUE)
-plot (density (rwYSTI$rw), col = '#445026', lwd = 3, main = '', xlab = '', 
-      ylab = '', axes = FALSE)
-axis (side = 4, seq (0, 0.4, 0.1), las = 1)
-mtext (side = 4, line = 4, text = 'Density')
-dev.off ()
+PLOT <- FALSE; if (PLOT) {
+  png (file = '../fig/ringWidthsHist.png')
+  par (mar = c (5, 5, 1, 5)) 
+  hist (rwYSTI$rwYSTI, main = '', xlab = 'Ring width (mm)', las = 1, axes = FALSE,
+        col = '#AAB30099')
+  axis (side = 1, seq (0, 18, 5))
+  axis (side = 2, seq (0, 25000, 5000), las = 1)
+  par (new = TRUE)
+  plot (density (rwYSTI$rwYSTI), col = '#445026', lwd = 3, main = '', xlab = '', 
+        ylab = '', axes = FALSE)
+  axis (side = 4, seq (0, 0.4, 0.1), las = 1)
+  mtext (side = 4, line = 4, text = 'Density')
+  dev.off ()
+}
 #===============================================================================

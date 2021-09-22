@@ -1,14 +1,13 @@
 #===============================================================================
-# Script to add mean summer (i.e., June, July, and August) temperature data to 
-# the ring width for each tree and year
+# Script to add  climate data to the ring width for each growth measurement.
 #-------------------------------------------------------------------------------
 
 # load dependencies
 #-------------------------------------------------------------------------------
-library ('tidyverse') # to generally process data
-library ('lubridate') # to use as_date function
-library ('ncdf4')  # to manipulate netcdf files (climate)
-source ('wrangleGrowthData.R') # to load ring width data from all sites
+if (!existsFunction ('%>%')) library ('tidyverse') # to generally process data
+if (!existsFunction ('as_date')) library ('lubridate') # to use as_date function
+if (!existsFunction ('nc_open')) library ('ncdf4')  # to manipulate netcdf files (climate)
+if (!exists ('rwYS')) source ('simplifyGrowthData.R') # to load ring width data from all sites
 
 # initialise spatial resolution for climate data
 #-------------------------------------------------------------------------------
@@ -16,7 +15,7 @@ res <- 0.25
 
 # directory name with climate data
 #-------------------------------------------------------------------------------
-dirString <- '../data/climate/princeton/'
+dirString <- '/Volumes/TREE LAB001/data/climate/princeton/'
 
 # initial possible climates for climate data 
 #-------------------------------------------------------------------------------
@@ -30,15 +29,15 @@ siteMetaData <- siteMetaData %>% mutate (eleClim = NA)
 
 # add tas column for mean summer temperature of the growing site
 #-------------------------------------------------------------------------------
-d <- rwYSTI %>% mutate (tasJan0 = NA, preJan0 = NA, # current January   climate
-                        tasFeb0 = NA, preFeb0 = NA, # current February  climate
-                        tasMar0 = NA, preMar0 = NA, # current March     climate
-                        tasApr0 = NA, preApr0 = NA, # current April     climate
-                        tasMay0 = NA, preMay0 = NA, # current May       climate
-                        tasJun0 = NA, preJun0 = NA, # current June      climate
-                        tasJul0 = NA, preJul0 = NA, # current July      climate
-                        tasAug0 = NA, preAug0 = NA, # current August    climate
-                        tasSep0 = NA, preSep0 = NA) # current September climate
+d <- rwYS %>% mutate (tasJan0 = NA, preJan0 = NA, # current January   climate
+                      tasFeb0 = NA, preFeb0 = NA, # current February  climate
+                      tasMar0 = NA, preMar0 = NA, # current March     climate
+                      tasApr0 = NA, preApr0 = NA, # current April     climate
+                      tasMay0 = NA, preMay0 = NA, # current May       climate
+                      tasJun0 = NA, preJun0 = NA, # current June      climate
+                      tasJul0 = NA, preJul0 = NA, # current July      climate
+                      tasAug0 = NA, preAug0 = NA, # current August    climate
+                      tasSep0 = NA, preSep0 = NA) # current September climate
 
 # loop over each site to find compute and add mean summer temperature 
 #-------------------------------------------------------------------------------
@@ -74,7 +73,7 @@ for (s in 1:dim (siteMetaData) [1]) {
 
   # read grid cell elevation from climate data and add it to the metaData
   #-----------------------------------------------------------------------------
-  nc_elev <- nc_open (file = '../data/climate/princeton/elevation_0.25deg.nc')
+  nc_elev <- nc_open (file = paste0 (dirString,'elevation_0.25deg.nc'))
   siteMetaData$eleClim [s] <- 
     ncvar_get (nc_elev, "elev", 
                start = c (iLon, iLat2, 1, 1), 
@@ -150,12 +149,12 @@ for (s in 1:dim (siteMetaData) [1]) {
       
       # add mean period air surface temperature to the data 
       #-------------------------------------------------------------------------
-      d [which (d$site == s), 7 + 2 * (m - 1)] <- tas  [doyStart:doyEnd] %>% 
+      d [which (d$site == s), 10 + 2 * (m - 1)] <- tas  [doyStart:doyEnd] %>% 
         mean ()
       
       # add total period precipitation to the data 
       #-------------------------------------------------------------------------
-      d [which (d$site == s), 8 + 2 * (m - 1)] <- prcp [doyStart:doyEnd] %>% 
+      d [which (d$site == s), 11 + 2 * (m - 1)] <- prcp [doyStart:doyEnd] %>% 
         sum ()
     }  # close loop over months
     
@@ -166,25 +165,28 @@ for (s in 1:dim (siteMetaData) [1]) {
   
 } # close loop over sites
 time1 <- Sys.time ()
-time1 - time0 # currently takes about 14 minutes
+time1 - time0 
+# currently takes about 1 hour for 53 sites with files on external hard drive
 
-# make histogram of summer temperatures
+# make histogram of mean January temperatures
 #-----------------------------------------------------------------------------
-png (file = "../fig/janTemperaturesHist.png")
-par (mar = c (5, 5, 1, 5))
-hist (d$tasJan0, 
-      xlab = expression (paste ('Mean summer temperature (',degree,'C)', 
-                                sep = '')), 
-      main = '', col = '#EB99A999', xlim = c (-20, 10), ylim = c (0, 15000), 
-      las = 1, lty = 1, lwd = 1, ylab = '', axes = FALSE)
-axis (side = 1, seq (-20, 10, 5))
-axis (side = 2, seq (0, 9000, 3000), las = 1)
-mtext (side = 2, text = "Frequency", line = 3)
-mtext (side = 4, text = "Density", line = 3)
-rhoTas <- density (d$tas, na.rm = TRUE)
-par (new = TRUE)
-plot (rhoTas, ylim = c (0, 0.15), axes = FALSE, col = '#901C3B', lwd = 3, 
-      main = "", xlab = "", ylab = "")
-axis (side = 4, las = 1)
-dev.off ()
+  PLOT <- FALSE; if (PLOT) {
+  png (file = "../fig/janTemperaturesHist.png")
+  par (mar = c (5, 5, 1, 5))
+  hist (d$tasJan0, 
+        xlab = expression (paste ('Mean summer temperature (',degree,'C)', 
+                                  sep = '')), 
+        main = '', col = '#EB99A999', xlim = c (-20, 10), ylim = c (0, 18000), 
+        las = 1, lty = 1, lwd = 1, ylab = '', axes = FALSE)
+  axis (side = 1, seq (-20, 10, 5))
+  axis (side = 2, seq (0, 18000, 3000), las = 1)
+  mtext (side = 2, text = "Frequency", line = 3)
+  mtext (side = 4, text = "Density", line = 3)
+  rhoTas <- density (d$tasJan0, na.rm = TRUE)
+  par (new = TRUE)
+  plot (rhoTas, ylim = c (0, 0.2), axes = FALSE, col = '#901C3B', lwd = 3, 
+        main = "", xlab = "", ylab = "")
+  axis (side = 4, las = 1)
+  dev.off ()
+}
 #===============================================================================
