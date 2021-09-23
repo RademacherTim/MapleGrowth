@@ -13,13 +13,13 @@ if (!existsFunction ('%>%')) library ('tidyverse')
 # group and summarise r'wYSTI' by tree (i.e., across increment cores)
 #-------------------------------------------------------------------------------
 rwYST <- rwYSTI %>% 
-  group_by (year, site, treeID) %>% 
+  group_by (species, year, site, treeID) %>% 
   summarise (rwYST = mean (rwYSTI), .groups = 'drop') 
 
 # further group and summarise 'rwYST' by site (i.e., across trees)
 #-------------------------------------------------------------------------------
 rwYS <- rwYST %>% 
-  group_by (year, site) %>% 
+  group_by (species, year, site) %>% 
   summarise (rwYS = mean (rwYST), .groups = 'drop')
 
 #===============================================================================

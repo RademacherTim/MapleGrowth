@@ -149,32 +149,33 @@ for (s in 1:dim (siteMetaData) [1]) {
       
       # add mean period air surface temperature to the data 
       #-------------------------------------------------------------------------
-      d [which (d$site == s), 10 + 2 * (m - 1)] <- tas  [doyStart:doyEnd] %>% 
+      d [which (d$site == s), 5 + 2 * (m - 1)] <- tas  [doyStart:doyEnd] %>% 
         mean ()
       
       # add total period precipitation to the data 
       #-------------------------------------------------------------------------
-      d [which (d$site == s), 11 + 2 * (m - 1)] <- prcp [doyStart:doyEnd] %>% 
+      d [which (d$site == s), 6 + 2 * (m - 1)] <- prcp [doyStart:doyEnd] %>% 
         sum ()
     }  # close loop over months
     
     # delete unnecessary variables
-    #-------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     rm (fillValue, tas, nc_tas, fileNameTas, prcp, nc_prcp, fileNamePrcp)
   } # close loop over years
   
 } # close loop over sites
 time1 <- Sys.time ()
 time1 - time0 
-# currently takes about 1 hour for 53 sites with files on external hard drive
+# currently takes about 1 hour and a half for 52 sites with files on external 
+# hard drive. Access to external hard drive slows this substantially.
 
 # make histogram of mean January temperatures
-#-----------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
   PLOT <- FALSE; if (PLOT) {
   png (file = "../fig/janTemperaturesHist.png")
   par (mar = c (5, 5, 1, 5))
   hist (d$tasJan0, 
-        xlab = expression (paste ('Mean summer temperature (',degree,'C)', 
+        xlab = expression (paste ('Mean january temperatures (',degree,'C)', 
                                   sep = '')), 
         main = '', col = '#EB99A999', xlim = c (-20, 10), ylim = c (0, 18000), 
         las = 1, lty = 1, lwd = 1, ylab = '', axes = FALSE)

@@ -18,7 +18,9 @@ siteMetaData <- readxl::read_excel (
                  'text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ('ITRDB','NP','JTM'))
+  filter (source %in% c ('ITRDB','NP','JTM')) 
+# NB: Does not include BG chronologies.
+# NB: Still waiting for MG, SP and SW chronologies.
 
 # loop over files and load each of them into a tibble
 #-------------------------------------------------------------------------------
