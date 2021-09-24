@@ -29,16 +29,16 @@ siteMetaData <- siteMetaData %>% mutate (eleClim = NA)
 
 # add tas column for mean summer temperature of the growing site
 #-------------------------------------------------------------------------------
-d <- rwEYST %>% mutate (tasJan0 = NA, preJan0 = NA, # current January   climate
-                        tasFeb0 = NA, preFeb0 = NA, # current February  climate
-                        tasMar0 = NA, preMar0 = NA, # current March     climate
-                        tasApr0 = NA, preApr0 = NA, # current April     climate
-                        tasMay0 = NA, preMay0 = NA, # current May       climate
-                        tasJun0 = NA, preJun0 = NA, # current June      climate
-                        tasJul0 = NA, preJul0 = NA, # current July      climate
-                        tasAug0 = NA, preAug0 = NA, # current August    climate
-                        tasSep0 = NA, preSep0 = NA) # current September climate
-
+d <- rwEYSTI %>% mutate (tasJan0 = NA, preJan0 = NA, # current January   climate
+                         tasFeb0 = NA, preFeb0 = NA, # current February  climate
+                         tasMar0 = NA, preMar0 = NA, # current March     climate
+                         tasApr0 = NA, preApr0 = NA, # current April     climate
+                         tasMay0 = NA, preMay0 = NA, # current May       climate
+                         tasJun0 = NA, preJun0 = NA, # current June      climate
+                         tasJul0 = NA, preJul0 = NA, # current July      climate
+                         tasAug0 = NA, preAug0 = NA, # current August    climate
+                         tasSep0 = NA, preSep0 = NA) # current September climate
+ 
 # loop over each site to find compute and add mean summer temperature 
 #-------------------------------------------------------------------------------
 time0 <- Sys.time ()
@@ -149,12 +149,12 @@ for (s in 1:dim (siteMetaData) [1]) {
       
       # add mean period air surface temperature to the data 
       #-------------------------------------------------------------------------
-      d [which (d$site == s), 5 + 2 * (m - 1)] <- tas  [doyStart:doyEnd] %>% 
+      d [which (d$site == s), 7 + 2 * (m - 1)] <- tas  [doyStart:doyEnd] %>% 
         mean ()
       
       # add total period precipitation to the data 
       #-------------------------------------------------------------------------
-      d [which (d$site == s), 6 + 2 * (m - 1)] <- prcp [doyStart:doyEnd] %>% 
+      d [which (d$site == s), 8 + 2 * (m - 1)] <- prcp [doyStart:doyEnd] %>% 
         sum ()
     }  # close loop over months
     

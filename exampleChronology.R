@@ -107,35 +107,37 @@ wideDataE <- rwYSTI %>% group_by (year) %>%
 
 # plot time series
 #-------------------------------------------------------------------------------
-par (mar = c (5, 5, 1, 1))
-plot (x = NULL, 
-      xlim = c (1800, 2010), typ = 'l', ylim = c (0, 8.0), 
-      axes = FALSE, xlab = 'Year of formation', ylab = 'Ring width (mm)')
-axis (side = 1)
-axis (side = 2, las = 1)
-# add individual cores data
-for (i in 1:dim (wideDataI) [1]) {
-  lines (x = 1808:2005, y = wideDataI [i, 4:dim (wideDataI) [2]], lwd  = 0.3,
-         col = '#66666666')
-}
-# add average tree data
-for (t in 1:dim (wideDataT) [1]) {
-  lines (x = 1808:2005, y = wideDataT [t, 3:dim (wideDataT) [2]], lwd  = 0.5,
-         col = '#333333')
-}
-# add average site data
-for (s in 1:2) {
+PLOT <- FALSE; if (PLOT) {
+  par (mar = c (5, 5, 1, 1))
+  plot (x = NULL, 
+        xlim = c (1800, 2010), typ = 'l', ylim = c (0, 8.0), 
+        axes = FALSE, xlab = 'Year of formation', ylab = 'Ring width (mm)')
+  axis (side = 1)
+  axis (side = 2, las = 1)
+  # add individual cores data
+  for (i in 1:dim (wideDataI) [1]) {
+    lines (x = 1808:2005, y = wideDataI [i, 4:dim (wideDataI) [2]], lwd  = 0.3,
+           col = '#66666666')
+  }
+  # add average tree data
+  for (t in 1:dim (wideDataT) [1]) {
+    lines (x = 1808:2005, y = wideDataT [t, 3:dim (wideDataT) [2]], lwd  = 0.5,
+           col = '#333333')
+  }
+  # add average site data
+  for (s in 1:2) {
+    polygon (x = c (1808:2005, 2005:1808), 
+             y = c (wideDataS [s, 2:dim (wideDataSM) [2]] + wideDataSE [s, 2:dim (wideDataS) [2]],
+                    rev (wideDataS [s, 2:dim (wideDataSM) [2]] - wideDataSE [s, 2:dim (wideDataS) [2]])),
+             lty = 0, col = '#10647044')
+    lines (x = 1808:2005, y = wideDataS [s, 2:dim (wideDataS) [2]], lwd  = 2,
+           col = '#106470')
+  }
+  # add overall mean and standard deviation
   polygon (x = c (1808:2005, 2005:1808), 
-           y = c (wideDataS [s, 2:dim (wideDataSM) [2]] + wideDataSE [s, 2:dim (wideDataS) [2]],
-                  rev (wideDataS [s, 2:dim (wideDataSM) [2]] - wideDataSE [s, 2:dim (wideDataS) [2]])),
-           lty = 0, col = '#10647044')
-  lines (x = 1808:2005, y = wideDataS [s, 2:dim (wideDataS) [2]], lwd  = 2,
-         col = '#106470')
+           y = c (wideData + wideDataE,
+                  rev (wideData - wideDataE)),
+           lty = 0, col = '#D6083B44')
+  lines (x = 1808:2005, y = wideData, lwd  = 3,
+         col = '#D6083B')
 }
-# add overall mean and standard deviation
-polygon (x = c (1808:2005, 2005:1808), 
-         y = c (wideData + wideDataE,
-                rev (wideData - wideDataE)),
-         lty = 0, col = '#D6083B44')
-lines (x = 1808:2005, y = wideData, lwd  = 3,
-       col = '#D6083B')
