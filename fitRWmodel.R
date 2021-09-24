@@ -7,26 +7,46 @@
 # load dependencies
 #-------------------------------------------------------------------------------
 if (!exists ('d')) source ('addClimate.R') # to load ring width data and summer temperatures from all sites
-if (!existsFunction ('ulam')) library ('rethinking') # to fit bayesian models qith ulam
+if (!existsFunction ('ulam')) library ('rethinking') # to fit bayesian models with ulam
 if (!existsFunction ('stan')) library ('rstan') # to run stan through R
 if (!existsFunction ('tibble')) library ('tidyverse') # to use tidyverse
+if (!existsFunction ('brm')) library ('brms') # to actually fit the model
 
-# standardise ring width
+# Options to optimise stan on this machine
+#-------------------------------------------------------------------------------
+rstan_options (auto_write = TRUE)
+options (mc.cores = parallel::detectCores ())
+
+# plot ring width data to show tits raw distribution
+#-------------------------------------------------------------------------------
+par (mar = c (5, 5, 1, 1))
+hist (d$rwYS [d$species == 'ACSA'], 
+      xlab = expression (paste (rw['y,s'],' (mm)', sep = '')),
+      main = '', col = '#f3bd4833', xlim = c (0, 10.5), breaks = seq (0, 10, by = 0.5))
+hist (d$rwYS [d$species == 'ACRU'], 
+      xlab = expression (paste (rw['y,s'],' (mm))', sep = '')),
+      main = '', col = '#901c3b33', add = TRUE, breaks = seq (0, 10, by = 0.5))
+
+# transform ring width
 #-------------------------------------------------------------------------------
 muRWprior <- mean (log (d$rwYS))
 sigmaRWprior <- sd (log (d$rwYS))
 data <- d %>% mutate (rwYS = log (rwYS + 1))
 
+# plot ring width data to show that transformation made is close to normal
+#-------------------------------------------------------------------------------
+par (mar = c (5, 5, 1, 1))
+hist (data$rwYS [data$species == 'ACSA'], 
+      xlab = expression (paste ('log (',rw['y,s'],' + 1)', sep = '')),
+      main = '', col = '#f3bd4833', xlim = c (0, 2.5))
+hist (data$rwYS [data$species == 'ACRU'], 
+      xlab = expression (paste ('log (',rw['y,s'],' + 1)', sep = '')),
+      main = '', col = '#901c3b33', add = TRUE)
+
 # let's start with sugar maple only 
 # N.B.: Integrate species as a variable in the model eventually
 #-------------------------------------------------------------------------------
 data <- data %>% dplyr::filter (species == 'ACSA')
-
-# plot ring width data to show that transformation made is close to normal
-#-------------------------------------------------------------------------------
-par (mar = c (5, 5, 1, 1))
-hist (data$rwYS, xlab = expression (paste ('log (',rw['y,s'],' + 1)', sep = '')),
-      main = '', col = '#91b0a466')
 
 # Some exploration to chose reasonable priors
 #-------------------------------------------------------------------------------

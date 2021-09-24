@@ -10,16 +10,16 @@
 if (!exists ('rwYSTI')) source ('wrangleGrowthData.R')
 if (!existsFunction ('%>%')) library ('tidyverse')
 
-# group and summarise r'wYSTI' by tree (i.e., across increment cores)
+# group and summarise 'rwEYSTI' by tree (i.e., across increment cores)
 #-------------------------------------------------------------------------------
-rwYST <- rwYSTI %>% 
+rwEYST <- rwEYSTI %>% 
   group_by (species, year, site, treeID) %>% 
-  summarise (rwYST = mean (rwYSTI), .groups = 'drop') 
+  summarise (rwEYST = mean (rwEYSTI), .groups = 'drop') 
 
-# further group and summarise 'rwYST' by site (i.e., across trees)
+# further group and summarise 'rwYEST' by site (i.e., across trees)
 #-------------------------------------------------------------------------------
-rwYS <- rwYST %>% 
+rwEYS <- rwEYST %>% 
   group_by (species, year, site) %>% 
-  summarise (rwYS = mean (rwYST), .groups = 'drop')
+  summarise (rwEYS = mean (rwYEST), .groups = 'drop')
 
 #===============================================================================

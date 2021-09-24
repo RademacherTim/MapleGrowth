@@ -1,40 +1,32 @@
 #===============================================================================
 # Script to read locations for maple (i.e., red maple and sugar maple) growth 
-# data such as chronologies from the International Tree-Ring Database (ITRDB), 
-# as cleaned by Zhao et al. (2019)
+# data such as chronologies:
+#     - International Tree-Ring Database, as cleaned by Zhao et al. (2019), 
+#     - Neil Pederson
+#     - Justin Timothy Maxwell
+#     - Benoit Gendreau-Berthiaume
+#     - Scott Warner
+#     - David A. Orwig
+#     - Tim Rademacher
+#     - Serge Payette
+#     - Martin Girardin
 #-------------------------------------------------------------------------------
 
 # load dependencies
 #-------------------------------------------------------------------------------
-library ('tidyverse')
+if (!existsFunction ('%>%')) library ('tidyverse')
 library ('ggplot2')
 library ('ggmap')
 library ('maps')
-library ('mapdata')
+library ('mapdata') # needed for canadian borders
 library ('maptools')
 library ('broom')
 library ('sf')
 #library ('rnaturalearth')
 #library ('rnaturalearthdata')
 library ('lubridate')
-library ('readxl')
+if (!existsFunction ('readxl')) library ('readxl')
 library ('tiff')
-
-# read ITRDB coordinates and metadata
-#-------------------------------------------------------------------------------
-# ITRDBcoordinates <- read_csv (
-#   file = '../data/growth/chronologyData/ITRDB_cleaned_Zhao2019/coordinate.csv',
-#   col_types = cols ())
-# ITRDBmetadata <- read_csv (
-#   file = '../data/growth/chronologyData/ITRDB_cleaned_Zhao2019/rwl_metadata.csv',
-#   col_types = cols ())
-
-# filter out any rows that are not maple species
-#-------------------------------------------------------------------------------
-# ITRDBcoordinates <- ITRDBcoordinates %>% 
-#   filter (substr (speciesCode, 1, 2) == 'AC')
-# ITRDBmetadata <- ITRDBmetadata %>% 
-#   filter (substr (species, 1, 2) == 'AC')
 
 # get coordinates from Neil Pederson's (NP),  David A. Orwig's (DAO), Justin 
 # Timothy Maxwell's (JTM), and Scott Warner's (SW) chronologies
@@ -42,7 +34,7 @@ library ('tiff')
 siteMetaData <- readxl::read_excel (col_names = TRUE, 
   col_types = c ('numeric','text','text','text','text','numeric',
                  'numeric','numeric','numeric','numeric','numeric','numeric',
-                 'text','text','text'),
+                 'text','text','text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx')
 siteMetaData <- siteMetaData %>% 
   mutate (colour = ifelse (species == 'ACRU', '#901c3bcc','#f3bd48cc'))
