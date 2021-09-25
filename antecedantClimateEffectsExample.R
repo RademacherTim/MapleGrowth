@@ -22,26 +22,6 @@ dirString <- '/Volumes/TREE LAB001/data/climate/princeton/'
 dates <- seq (from = as_date ('1948-01-01'), 
               to   = as_date ('2016-12-31'), by = 1)
 
-# add tas column for mean summer temperature of the growing site
-#-------------------------------------------------------------------------------
-d <- rwYSTI %>% mutate (tasJan0 = NA, preJan0 = NA, # current January   climate
-                        tasFeb0 = NA, preFeb0 = NA, # current February  climate
-                        tasMar0 = NA, preMar0 = NA, # current March     climate
-                        tasApr0 = NA, preApr0 = NA, # current April     climate
-                        tasMay0 = NA, preMay0 = NA, # current May       climate
-                        tasJun0 = NA, preJun0 = NA, # current June      climate
-                        tasJul0 = NA, preJul0 = NA, # current July      climate
-                        tasAug0 = NA, preAug0 = NA, # current August    climate
-                        tasSep0 = NA, preSep0 = NA) # current September climate
-
-# loop over each site to find compute and add mean summer temperature 
-#-------------------------------------------------------------------------------
-time0 <- Sys.time ()
-
-# print site number to see progress
-#-----------------------------------------------------------------------------
-print (s)
-
 # get site's ID and the year of growth
 #-----------------------------------------------------------------------------
 startYear <- ifelse (metaData$start [1] < 1948, 1948, 
@@ -88,16 +68,16 @@ for (y in startYear:endYear) {
   #     600 latitudinal  grid cells spanning from -59.875 to  89.875 degrees,
   #     365 ou 366 temporal steps spanning from 0 to 525600 minutes 
   #---------------------------------------------------------------------------
-  tas  <- ncvar_get (nc_tas,  "tas",  start = c (iLon, iLat, 1), 
+  tasTmp  <- ncvar_get (nc_tas,  "tas",  start = c (iLon, iLat, 1), 
                      count = c (1, 1, daysInYear)) # K
-  prcp <- ncvar_get (nc_prcp, "prcp", start = c (iLon, iLat, 1), 
+  prcpTmp <- ncvar_get (nc_prcp, "prcp", start = c (iLon, iLat, 1), 
                      count = c (1, 1, daysInYear)) # kg m-2 s-1
   
   # get and replace fill values
   #---------------------------------------------------------------------------
   fillValue <- ncatt_get (nc_tas, "tas", "_FillValue")
-  tas  <- tas  %>% replace (tas  == fillValue$value, values = NA)
-  prcp <- prcp %>% replace (prcp == fillValue$value, values = NA)
+  tasTmp  <- tasTmp  %>% replace (tasTmp  == fillValue$value, values = NA)
+  prcpTmp <- prcpTmp %>% replace (prcpTmp == fillValue$value, values = NA)
   
   # close annual climate data files
   #---------------------------------------------------------------------------
@@ -106,46 +86,90 @@ for (y in startYear:endYear) {
   
   # convert units
   #---------------------------------------------------------------------------
-  tas  <- tas  - 273.15                               # K          -> deg C
-  prcp <- prcp * 86400                                # kg m-2 s-1 -> mm d-1
+  tasTmp  <- tasTmp  - 273.15                               # K          -> deg C
+  prcpTmp <- prcpTmp * 86400                                # kg m-2 s-1 -> mm d-1
   
-  # determine day of the year when month start and end
-  #---------------------------------------------------------------------------
-  if (daysInYear == 365) {
-    startDOYs <- c (1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335)
+  # concatenate the climate variables
+  #-----------------------------------------------------------------------------
+  if (y == startYear) {
+    tas  <- tasTmp
+    prcp <- prcpTmp
+    doy  <- 1:daysInYear
+    year <- rep (y, daysInYear)
   } else {
-    startDOYs <- c (1, 32, 61, 92, 122, 153, 183, 214, 245, 275, 306, 336)
-  }
-  if (daysInYear == 365) {
-    endDOYs <- c (31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365)
-  } else {
-    endDOYs <- c (31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366)
+    tas  <- c (tas, tasTmp)
+    prcp <- c (prcp, prcpTmp)
+    doy  <- c (doy, 1:daysInYear)
+    year <- c (year, rep (y, daysInYear))
   }
   
-  # loop over months 
-  # N.B.: should eventually add the previous five years here as a loop
-  #---------------------------------------------------------------------------
-  for (m in 1:9) { # only include months up to current September
-    
-    # determine days for the start and end of the period
-    #-------------------------------------------------------------------------
-    doyStart <- startDOYs [m] # first day of month
-    doyEnd   <- endDOYs   [m] # first day of month
-    
-    # add mean period air surface temperature to the data 
-    #-------------------------------------------------------------------------
-    d [which (d$site == s), 7 + 2 * (m - 1)] <- tas  [doyStart:doyEnd] %>% 
-      mean ()
-    
-    # add total period precipitation to the data 
-    #-------------------------------------------------------------------------
-    d [which (d$site == s), 8 + 2 * (m - 1)] <- prcp [doyStart:doyEnd] %>% 
-      sum ()
-  }  # close loop over months
-  
-  # delete unnecessary variables
-  #---------------------------------------------------------------------------
-  rm (fillValue, tas, nc_tas, fileNameTas, prcp, nc_prcp, fileNamePrcp)
 } # close loop over years
+
+# put all data back into one tibble
+#-------------------------------------------------------------------------------
+clmDaily <- tibble (tas = tas, prcp = prcp, doy = doy, year = year) %>% 
+  mutate (date = as_date (doy, origin = paste0 (year,"-01-01")),
+          month = month (date))
+clmMonthly <- clmDaily %>% group_by (year, month) %>%
+  summarise (tas = mean (tas),
+             prcp = sum (prcp), .groups = 'drop') %>%
+  mutate (date = as_date (paste (year,month,'15', sep = '-')))
+clmAnnually <- clmDaily %>% group_by (year) %>%
+  summarise (muTas = mean (tas),
+             sdTas = sd (tas, na.rm = TRUE),
+             muPrcp = sum (prcp),
+             sdPrcp = sd (prcp, na.rm = TRUE), .groups = 'drop') %>%
+  mutate (date = as_date (paste (year,'07-01', sep = '-')))
+
+# plot the temperature and precipitation for entire record
+#-------------------------------------------------------------------------------
+par (mar = c (3, 5, 1, 5))
+plot (x = clmDaily$date, y = clmDaily$tas, typ = 'l', xlab = '', lwd = 0.1, 
+      ylim = c (-35, 70), 
+      ylab = expression (paste ('Temperature (',degree,'C)', sep = '')), 
+      axes = FALSE)
+axis (side = 1, at = c (as_date ('1950-01-01'), as_date ('1960-01-01'), 
+                        as_date ('1970-01-01'), as_date ('1980-01-01'),
+                        as_date ('1990-01-01'), as_date ('2000-01-01')), 
+      labels = seq (1950, 2000, by = 10))
+axis (side = 2, las = 1, at = seq (-30, 30, by = 10))
+lines (x = clmMonthly$date, y = clmMonthly$tas, col = '#66666666')
+polygon (x = c (clmAnnually$date, rev (clmAnnually$date)),
+         y = c (clmAnnually$muTas + clmAnnually$sdTas, 
+                rev (clmAnnually$muTas - clmAnnually$sdTas)),
+         lty = 0, col = '#901C3B33')
+lines (x = clmAnnually$date, y = clmAnnually$muTas, col = '#901C3B', lwd = 2)
+par (new = TRUE)
+plot (x = clmAnnually$date, y = clmAnnually$muPrcp, xlab = '', pch = 19,
+      ylab = '', ylim = c (0, 1500),
+      col = '#003E74aa', axes = FALSE)
+lines (x = clmAnnually$date, y = clmAnnually$muPrcp, col = '#003E74aa', lwd = 3)
+axis (side = 4, at = seq (0, 1500, 500), las = 1)
+mtext (side = 4, line = 3, text = 'Precipitation (mm)')
+
+# plot the temperature and precipitation for 1968 to 1972
+#-------------------------------------------------------------------------------
+par (mar = c (3, 5, 1, 5))
+plot (x = clmDaily$date, y = clmDaily$tas, typ = 'l', xlab = '', lwd = 0.1, 
+      xlim = c (as_date ('1969-01-01'), as_date ('1974-12-31')), ylim = c (-50, 30),
+      ylab = expression (paste ('Temperature (',degree,'C)', sep = '')), axes = FALSE)
+axis (side = 1, at = c (as_date ('1969-01-01'), 
+                        as_date ('1970-01-01'), as_date ('1971-01-01'),
+                        as_date ('1972-01-01'), as_date ('1973-01-01'),
+                        as_date ('1974-01-01'), as_date ('1975-01-01')), 
+      labels = seq (1969, 1975, 1))
+axis (side = 2, las = 1, at = seq (-30, 30, by = 10))
+lines (x = clmMonthly$date, y = clmMonthly$tas, col = '#901C3B', lwd = 2)
+points (x = clmMonthly$date, y = clmMonthly$tas, col = '#901C3B', pch = 21, 
+        bg = 'white', lwd = 2)
+par (new = TRUE)
+plot (x = clmMonthly$date, y = clmMonthly$prcp, xlab = '', pch = 19,
+      ylab = '', xlim = c (as_date ('1969-01-01'), as_date ('1974-12-31')), 
+      ylim = c (0, 520),
+      col = '#003E74', axes = FALSE)
+lines (x = clmMonthly$date, y = clmMonthly$prcp, col = '#003E74aa', lwd = 3)
+axis (side = 4, at = seq (0, 500, 100), las = 1)
+mtext (side = 4, line = 3, text = 'Precipitation (mm)')
+
 
 #===============================================================================

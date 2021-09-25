@@ -89,7 +89,7 @@ formula1 <- bf (rwYST ~ (1 | site) +
                 sigma ~ treeID)
 time0 <- Sys.time ()
 mod1 <- brm (family = 'gaussian',
-             formula = formula0,
+             formula = formula1,
              data = data)
 time1 <- Sys.time ()
 time1 - time0
