@@ -18,8 +18,7 @@ siteMetaData <- readxl::read_excel (
                  'text','text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ('ITRDB','NP','JTM')) 
-# NB: Does not include BG chronologies.
+  filter (source %in% c ('ITRDB','NP','JTM','BG')) 
 # NB: Still waiting for MG, SP and SW chronologies.
 
 # loop over files and load each of them into a tibble
@@ -34,9 +33,11 @@ for (i in 1:dim (siteMetaData) [1]) {
     fPath <- '../data/growth/chronologyData/NeilPedersonCollection/'
   } else if (siteMetaData$source [i] == 'JTM') {
     fPath <- '../data/growth/chronologyData/JustinMaxwellCollection/'
-  }# else if (siteMetaData$source == 'SW') {
-  #  fPath <- ''
-  #}
+  } else if (siteMetaData$source [i] == 'BG') {
+    fPath <- '../data/growth/chronologyData/ISFORT/BenoitGendreau-Berthiaume/'
+  } else if (siteMetaData$source [i] == 'SW') {
+    fPath <- '../data/growth/chronologyData/ScottWarnerCollection/'
+  }
   filename <- paste0 (fPath, siteMetaData$file [i])
   #print (filename)
   
@@ -73,46 +74,47 @@ for (i in 1:dim (siteMetaData) [1]) {
   
   # initialise tibble 
   if (i == 1) {
-    rwEYSTI <- temp
+    tempData <- temp
   # or add to it
   } else {
-    rwEYSTI <- rbind (rwEYSTI, temp)
+    tempData <- rbind (tempData, temp)
   } 
 }
 
-# delete all data preceeding 1948 or after 2016, as there is no climate data for 
+# add unique tree and core IDs for simulation to each row
+#-------------------------------------------------------------------------------
+tempData <- tempData %>% mutate (treeID = NA, incrementCoreID = NA)
+tempData$treeID <- tempData %>% 
+  group_by (site, tree) %>% 
+  group_indices () %>% as.factor ()
+max (as.numeric (levels (tempData$treeID)))
+tempData$incrementCoreID <- tempData %>% 
+  group_by (site, tree, core) %>% 
+  group_indices () %>% as.factor () 
+max (as.numeric (levels (tempData$incrementCoreID)))
+
+# extract cardinal direction of the core
+#-------------------------------------------------------------------------------
+tempData$core [which (tempData$core %in% c ('n','N'))] <- 'North'
+tempData$core [which (tempData$core %in% c ('e','E'))] <- 'East'
+tempData$core [which (tempData$core %in% c ('s','S'))] <- 'South'
+tempData$core [which (tempData$core %in% c ('w','W'))] <- 'West'
+tempData <- tempData %>% 
+  mutate (cardinalDir = ifelse (core == 'North', 'North', 
+                                ifelse (core == 'East', 'East', 
+                                        ifelse (core == 'South', 'South', 
+                                                ifelse (core == 'West', 'West', NA)))))
+
+# delete all data preceding 1948 or after 2016, as there is no climate data for 
 # these years
 #-------------------------------------------------------------------------------
-rwEYSTI <- rwEYSTI %>% filter (year >= 1948 & year <= 2016)
+rwEYSTI <- tempData %>% filter (year >= 1948 & year <= 2016)
 
 # make sure year  and site are a integers
 #-------------------------------------------------------------------------------
 rwEYSTI <- rwEYSTI %>% mutate (site = as.factor (site),
                                year = as.factor (year))
 
-# add unique tree and core IDs for simulation to each row
-#-------------------------------------------------------------------------------
-rwEYSTI <- rwEYSTI %>% mutate (treeID = NA, incrementCoreID = NA)
-rwEYSTI$treeID <- rwEYSTI %>% 
-  group_by (site, tree) %>% 
-  group_indices () %>% as.factor ()
-max (as.numeric (levels (rwEYSTI$treeID)))
-rwEYSTI$incrementCoreID <- rwEYSTI %>% 
-  group_by (site, tree, core) %>% 
-  group_indices () %>% as.factor () 
-max (as.numeric (levels (rwEYSTI$incrementCoreID)))
-
-# extract cardinal direction of the core
-#-------------------------------------------------------------------------------
-rwEYSTI$core [which (rwEYSTI$core %in% c ('n','N'))] <- 'North'
-rwEYSTI$core [which (rwEYSTI$core %in% c ('e','E'))] <- 'East'
-rwEYSTI$core [which (rwEYSTI$core %in% c ('s','S'))] <- 'South'
-rwEYSTI$core [which (rwEYSTI$core %in% c ('w','W'))] <- 'West'
-rwEYSTI <- rwEYSTI %>% 
-  mutate (cardinalDir = ifelse (core == 'North', 'North', 
-                                ifelse (core == 'East', 'East', 
-                                        ifelse (core == 'South', 'South', 
-                                                ifelse (core == 'West', 'West', NA)))))
 # deselect cardinal direction for now and only keep incrementCoreID and treeID
 #-------------------------------------------------------------------------------
 rwEYSTI <- rwEYSTI %>% select (-cardinalDir, -core, -tree)
