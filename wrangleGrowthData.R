@@ -13,9 +13,9 @@ if (!existsFunction ('read.rwl')) library ('dplR') # to read chronology files
 #-------------------------------------------------------------------------------
 siteMetaData <- readxl::read_excel (
   col_names = TRUE, 
-  col_types = c ('numeric','text','text','text','text','numeric','numeric',
+  col_types = c ('numeric','text','text','text','text','text','text',
                  'numeric','numeric','numeric','numeric','numeric','text',
-                 'text','text','text'),
+                 'logical','text','text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
   filter (!is.na (file)) %>% 
   filter (source %in% c ('ITRDB','NP','JTM','BG')) 
@@ -42,7 +42,9 @@ for (i in 1:dim (siteMetaData) [1]) {
   #print (filename)
   
   # read the rwl file
-  tmp <- read.rwl (fname = filename, format = 'tucson')
+  tmp <- read.rwl (fname = filename, format = 'tucson', 
+                   header = ifelse (is.na (siteMetaData$header [i]), TRUE, 
+                                    siteMetaData$header [i]))
   
   # add year as a row
   tmp$year <- rownames (tmp)
@@ -53,14 +55,25 @@ for (i in 1:dim (siteMetaData) [1]) {
                           values_to = 'rwEYSTI', names_sep = '-', 
                           names_to = c ('tree','core'))
   } else if (siteMetaData$labelFormat [i] %in% c ('SSSTTI','SSSSTTI','SSPPTTI',
-                                                  'SSSPPTTI','SSSSSTTI')) {
+                                                  'SSSPTTI','SSSPPTTI','SSSSSTTI')) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
                           values_to = 'rwEYSTI', names_sep = c (2,3),
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ('tree','core'))
-  } else if (siteMetaData$labelFormat [i] %in% c ('SSPTTTI','TTTI')) {
+    if (siteMetaData$site [i] == 97) {
+      temp$core [temp$tree == '18'] <- 'N2'
+      temp$tree [temp$tree == '18'] <- '08'
+    }
+  } else if (siteMetaData$labelFormat [i] %in% c ('SSPTTTI','TTTI','SSPTTI',
+                                                  'SSSTT')) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
                           values_to = 'rwEYSTI', names_sep = c (3,4),
+                          names_prefix = siteMetaData$labelPrefix [i],
+                          names_to = c ('tree','core'))
+    if (siteMetaData$site [i] %in% c (23:26)) temp$core <- '1'
+  } else if (siteMetaData$labelFormat [i] %in% c ('SSSSTTII')) {
+    temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
+                          values_to = 'rwEYSTI', names_sep = c (2,4),
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ('tree','core'))
   }
@@ -79,6 +92,22 @@ for (i in 1:dim (siteMetaData) [1]) {
   } else {
     tempData <- rbind (tempData, temp)
   } 
+  
+  # print important metadata
+  VERBOSE <- FALSE
+  if (VERBOSE) {
+    print (sprintf ('Site: %i', siteMetaData$site [i]))
+    print (sprintf ('Start: %s', min (temp$year)))
+    print (sprintf ('End: %s', max (temp$year)))
+    print (sprintf ('nTrees: %i', n_groups (temp %>% group_by (tree))))
+    print (sprintf ('nCores: %i', n_groups (temp %>% group_by (tree, core))))
+    print (sprintf ('File name: %s', siteMetaData$file [i]))
+    print (head (temp))
+    print ('')
+  }
+  
+  # delete temporary variables 
+  rm (tmp, temp)
 }
 
 # add unique tree and core IDs for simulation to each row
@@ -95,9 +124,9 @@ max (as.numeric (levels (tempData$incrementCoreID)))
 
 # extract cardinal direction of the core
 #-------------------------------------------------------------------------------
-tempData$core [which (tempData$core %in% c ('n','N'))] <- 'North'
+tempData$core [which (tempData$core %in% c ('n','N','N2'))] <- 'North'
 tempData$core [which (tempData$core %in% c ('e','E'))] <- 'East'
-tempData$core [which (tempData$core %in% c ('s','S'))] <- 'South'
+tempData$core [which (tempData$core %in% c ('s','S','S2'))] <- 'South'
 tempData$core [which (tempData$core %in% c ('w','W'))] <- 'West'
 tempData <- tempData %>% 
   mutate (cardinalDir = ifelse (core == 'North', 'North', 

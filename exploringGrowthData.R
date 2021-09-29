@@ -39,38 +39,54 @@ for (i in 1:dim (tempData) [1]) {
 
 # plot ring width versus previous year ring width
 #-------------------------------------------------------------------------------
-par (mar = c (5, 5, 1, 1), mfrow = c (2, 1))
+par (mar = c (5, 5, 1, 1), mfrow = c (1, 2))
 plot (x = tempData$prevRW [tempData$species == 'ACSA'], 
       y = tempData$rwEYSTI [tempData$species == 'ACSA'], 
-      pch = 19, col = '#f3bd483311',
-      xlab = expression (paste (rw['y-1,s,t,i'], sep = '')), 
-      ylab = expression (paste (rw['y,s,t,i'], sep = '')),
+      pch = 19, col = '#f3bd4811',
+      xlab = expression (paste (rw['y-1,s,t,i'],' (mm)', sep = '')), 
+      ylab = expression (paste (rw['y,s,t,i'],' (mm)', sep = '')),
       xlim = c (0, 18), ylim = c (0, 18), axes = FALSE)
 axis (side = 1, at = seq (0, 15, by = 5))
 axis (side = 2, at = seq (0, 15, by = 5), las = 1)
 abline (a = 0 , b = 1, col = '#666666', lty = 3)
 summary (lm (prevRW [tempData$species == 'ACSA'] ~ 
                rwEYSTI [tempData$species == 'ACSA'], data = tempData))
+abline (lm (prevRW [tempData$species == 'ACSA'] ~ 
+              rwEYSTI [tempData$species == 'ACSA'], data = tempData), 
+        col = '#f38d48', lwd = 2)
 plot (x = tempData$prevRW [tempData$species == 'ACRU'], 
       y = tempData$rwEYSTI [tempData$species == 'ACRU'], 
-      pch = 19, col = '#f3bd483311',
-      xlab = expression (paste (rw['y-1,s,t,i'], sep = '')), 
-      ylab = expression (paste (rw['y,s,t,i'], sep = '')),
+      pch = 19, col = '#901c3b11',
+      xlab = expression (paste (rw['y-1,s,t,i'],' (mm)', sep = '')), 
+      ylab = expression (paste (rw['y,s,t,i'],' (mm)', sep = '')),
       xlim = c (0, 18), ylim = c (0, 18), axes = FALSE)
 axis (side = 1, at = seq (0, 15, by = 5))
 axis (side = 2, at = seq (0, 15, by = 5), las = 1)
 abline (a = 0 , b = 1, col = '#666666', lty = 3)
 summary (lm (prevRW [tempData$species == 'ACRU'] ~ 
                rwEYSTI [tempData$species == 'ACRU'], data = tempData))
+abline (lm (prevRW [tempData$species == 'ACRU'] ~ 
+              rwEYSTI [tempData$species == 'ACRU'], data = tempData), 
+        col = '#EB99A9', lwd = 2)
 
 # plot ring width versus over size (approximated dbh = cumulative ring width)
 #-------------------------------------------------------------------------------
-par (mar = c (5, 5, 1, 1))
-plot (x = tempData$prevRW, y = tempData$rwEYSTI, pch = 19, col = '#AAB30011',
-      xlab = expression (paste (rw['y-1,s,t,i'], sep = '')), 
-      ylab = expression (paste (rw['y,s,t,i'], sep = '')),
-      xlim = c (0, 18), ylim = c (0, 18), axes = FALSE)
-axis (side = 1, at = seq (0, 15, by = 5))
+par (mar = c (5, 5, 1, 1), mfrow = c (1, 2))
+plot (x = tempData$cumRW [tempData$species == 'ACSA'] / 10, 
+      y = tempData$rwEYSTI [tempData$species == 'ACSA'], 
+      pch = 19, col = '#f3bd4811',
+      xlab = expression (paste (rw['cum,s,t,i'],' (cm)', sep = '')), 
+      ylab = expression (paste (rw['y,s,t,i'],' (mm)', sep = '')),
+      xlim = c (0, 500), ylim = c (0, 18), axes = FALSE)
+axis (side = 1, at = seq (0, 500, by = 100))
 axis (side = 2, at = seq (0, 15, by = 5), las = 1)
-abline (a = 0 , b = 1, col = '#333333', lty = 3)
-summary (lm (prevRW ~ rwEYSTI, data = tempData))
+par (mar = c (5, 5, 1, 1))
+plot (x = tempData$cumRW [tempData$species == 'ACRU'] / 10, 
+      y = tempData$rwEYSTI [tempData$species == 'ACRU'], 
+      pch = 19, col = '#901c3b11',
+      xlab = expression (paste (rw['cum,s,t,i'],' (cm)', sep = '')), 
+      ylab = expression (paste (rw['y,s,t,i'],' (mm)', sep = '')),
+      xlim = c (0, 500), ylim = c (0, 18), axes = FALSE)
+axis (side = 1, at = seq (0, 500, by = 100))
+axis (side = 2, at = seq (0, 15, by = 5), las = 1)
+
