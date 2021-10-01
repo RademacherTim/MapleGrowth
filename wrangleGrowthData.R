@@ -18,7 +18,9 @@ siteMetaData <- readxl::read_excel (
                  'logical','text','text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ('ITRDB','NP','JTM','BG')) 
+  filter (source %in% c ('ITRDB','NP','JTM','BG')) %>%
+  mutate (lon = as.numeric (lon),
+          lat = as.numeric (lat))
 # NB: Still waiting for MG, SP and SW chronologies.
 
 # loop over files and load each of them into a tibble
@@ -156,17 +158,30 @@ rwEYSTI <- rwEYSTI %>% relocate (rwEYSTI, species, year, site, treeID, increment
 # make histogram of ring widths
 #-------------------------------------------------------------------------------
 PLOT <- FALSE; if (PLOT) {
-  png (file = '../fig/ringWidthsHist.png')
-  par (mar = c (5, 5, 1, 5)) 
-  hist (rwEYSTI$rwEYSTI, main = '', xlab = 'Ring width (mm)', las = 1, axes = FALSE,
-        col = '#AAB30099', breaks = seq (0, 18, by = 0.3))
+  png (file = '../fig/ringWidthsHist.png', width = 700, height = 400)
+  par (mar = c (5, 5, 1, 5), mfrow = c (1, 1)) 
+  hist (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACSA'], 
+        main = '', xlab = 'Ring width (mm)', las = 1, axes = FALSE,
+        ylim = c (0, 15000),
+        col = '#f3bd4833', breaks = seq (0, 18, by = 0.3))
+  hist (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACRU'], add = TRUE, axes = FALSE,
+        ylim = c (0, 15000), col = '#901c3b33', breaks = seq (0, 18, by = 0.3))
   axis (side = 1, seq (0, 18, 5))
-  axis (side = 2, seq (0, 25000, 5000), las = 1)
+  axis (side = 2, seq (0, 15000, 5000), las = 1)
   par (new = TRUE)
-  plot (density (rwYSTI$rwYSTI), col = '#445026', lwd = 3, main = '', xlab = '', 
-        ylab = '', axes = FALSE)
-  axis (side = 4, seq (0, 0.4, 0.1), las = 1)
+  plot (density (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACSA']), 
+        col = '#f3bd4866', lwd = 3, main = '', xlab = '', 
+        ylab = '', axes = FALSE, ylim = c (0, 0.5))
+  par (new = TRUE)
+  plot (density (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACRU']), 
+        col = '#901c3b66', lwd = 3, main = '', xlab = '', 
+        ylab = '', axes = FALSE, ylim = c (0, 0.5))
+  axis (side = 4, seq (0, 0.5, 0.1), las = 1)
   mtext (side = 4, line = 4, text = 'Density')
   dev.off ()
 }
+
+# clean up
+#-------------------------------------------------------------------------------
+rm (i, fPath, filename, PLOT, VERBOSE)
 #===============================================================================

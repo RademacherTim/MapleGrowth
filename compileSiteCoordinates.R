@@ -18,7 +18,7 @@ if (!existsFunction ('%>%')) library ('tidyverse')
 library ('ggplot2')
 library ('ggmap')
 library ('maps')
-library ('mapdata') # needed for canadian borders
+library ('mapdata') # needed for Canadian borders
 library ('maptools')
 library ('broom')
 library ('sf')
@@ -32,12 +32,14 @@ library ('tiff')
 # Timothy Maxwell's (JTM), and Scott Warner's (SW) chronologies
 #-------------------------------------------------------------------------------
 siteMetaData <- readxl::read_excel (col_names = TRUE, 
-  col_types = c ('numeric','text','text','text','text','numeric',
-                 'numeric','numeric','numeric','numeric','numeric','numeric',
-                 'text','text','text','text'),
+  col_types = c ('numeric','text','text','text','text','text','text',
+                 'numeric','numeric','numeric','numeric','numeric','text',
+                 'logical','text','text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx')
 siteMetaData <- siteMetaData %>% 
-  mutate (colour = ifelse (species == 'ACRU', '#901c3bcc','#f3bd48cc'))
+  mutate (colour = ifelse (species == 'ACRU', '#901c3bcc','#f3bd48cc'),
+          lon = as.numeric (lon),
+          lat = as.numeric (lat))
 
 # sum number of cores and trees sampled
 #-------------------------------------------------------------------------------
@@ -81,8 +83,8 @@ disACSH_ll <- disACSH %>%
 
 # Load map biomass map from Beaudoin et al. (2014)
 #-------------------------------------------------------------------------------
-disACRU_be <- readTIFF ('../data/distribution/beaudoin2014/Beaudoin_etal_2014_Acer/NFI_MODIS250m_kNN_Species_Acer_Rub_v0.tif')
-disACRU_be [which (disACRU_be < -1e6)] <- NA
+#disACRU_be <- readTIFF ('../data/distribution/beaudoin2014/Beaudoin_etal_2014_Acer/NFI_MODIS250m_kNN_Species_Acer_Rub_v0.tif')
+#disACRU_be [which (disACRU_be < -1e6)] <- NA
   
 # get map data for USA and Canada
 #-------------------------------------------------------------------------------
@@ -104,7 +106,9 @@ NAmap <- ggplot () +
   geom_sf (data = disACSH_ll, fill = '#f3bd4833', size = 0) +
   xlab ("Longitude") + ylab ("Latitude") +
   ggtitle('Samples sites across North America', 
-          subtitle = paste0 ('for growth of ', nSamples$nTrees,' maple trees from ',nSamples$nCores,' cores at ',max (siteMetaData$site),' sites')) +
+          subtitle = paste0 ('for growth of ', nSamples$nTrees,
+                             ' maple trees from ',nSamples$nCores,' cores at ',
+                             max (siteMetaData$site),' sites')) +
   geom_point (data = siteMetaData, 
               aes (x = lon, y = lat, fill = colour), 
              fill = siteMetaData [['colour']], 
