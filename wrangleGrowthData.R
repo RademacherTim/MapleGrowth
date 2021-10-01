@@ -90,13 +90,13 @@ for (i in 1:dim (siteMetaData) [1]) {
   # initialise tibble 
   if (i == 1) {
     tempData <- temp
-  # or add to it
+   or add to it
   } else {
     tempData <- rbind (tempData, temp)
   } 
   
   # print important metadata
-  VERBOSE <- FALSE
+  VERBOSE <- TRUE
   if (VERBOSE) {
     print (sprintf ('Site: %i', siteMetaData$site [i]))
     print (sprintf ('Start: %s', min (temp$year)))
@@ -126,9 +126,9 @@ max (as.numeric (levels (tempData$incrementCoreID)))
 
 # extract cardinal direction of the core
 #-------------------------------------------------------------------------------
-tempData$core [which (tempData$core %in% c ('n','N','N2'))] <- 'North'
+tempData$core [which (tempData$core %in% c ('n','N','N1','N2','N3'))] <- 'North'
 tempData$core [which (tempData$core %in% c ('e','E'))] <- 'East'
-tempData$core [which (tempData$core %in% c ('s','S','S2'))] <- 'South'
+tempData$core [which (tempData$core %in% c ('s','S','S1','S2','S3'))] <- 'South'
 tempData$core [which (tempData$core %in% c ('w','W'))] <- 'West'
 tempData <- tempData %>% 
   mutate (cardinalDir = ifelse (core == 'North', 'North', 
