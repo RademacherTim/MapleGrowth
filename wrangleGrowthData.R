@@ -90,13 +90,13 @@ for (i in 1:dim (siteMetaData) [1]) {
   # initialise tibble 
   if (i == 1) {
     tempData <- temp
-   or add to it
+  # or add to it
   } else {
     tempData <- rbind (tempData, temp)
-  } 
-  
+  }
+
   # print important metadata
-  VERBOSE <- TRUE
+  VERBOSE <- FALSE
   if (VERBOSE) {
     print (sprintf ('Site: %i', siteMetaData$site [i]))
     print (sprintf ('Start: %s', min (temp$year)))
@@ -123,6 +123,7 @@ tempData$incrementCoreID <- tempData %>%
   group_by (site, tree, core) %>% 
   group_indices () %>% as.factor () 
 max (as.numeric (levels (tempData$incrementCoreID)))
+length (unique (tempData$site))
 
 # extract cardinal direction of the core
 #-------------------------------------------------------------------------------
