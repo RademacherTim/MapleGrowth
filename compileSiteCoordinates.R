@@ -1,15 +1,19 @@
 #===============================================================================
 # Script to read locations for maple (i.e., red maple and sugar maple) growth 
 # data such as chronologies:
-#     - International Tree-Ring Database, as cleaned by Zhao et al. (2019), 
-#     - Neil Pederson
-#     - Justin Timothy Maxwell
-#     - Benoit Gendreau-Berthiaume
-#     - Scott Warner
-#     - David A. Orwig
-#     - Tim Rademacher
-#     - Serge Payette
-#     - Martin Girardin
+#     - ITRDB, from Zhao et al. (2019) (ITRDB)    - TRUE
+#     - Neil Pederson                  (NP)       - TRUE
+#     - Justin Timothy Maxwell         (JTM)      - TRUE
+#     - Benoit Gendreau-Berthiaume     (BG)       - TRUE
+#     - Scott Warner                   (SW)       - FALSE
+#     - David A. Orwig                 (DAO)      - TRUE
+#     - Tim Rademacher                 (TR)       - FALSE
+#     - Serge Payette                  (SP)       - FALSE
+#     - Martin Girardin                (MG)       - FALSE
+#     - Brett Huggett                  (BH)       - FALSE
+#     - Loic D'Orangeville             (LO)       - FALSE
+#     - Jay Wasom                      (JW)       - FALSE
+#     - Chistina Stinson               (CS)       - FALSE
 #-------------------------------------------------------------------------------
 
 # load dependencies
@@ -28,8 +32,8 @@ library ('lubridate')
 if (!existsFunction ('readxl')) library ('readxl')
 library ('tiff')
 
-# get coordinates from Neil Pederson's (NP),  David A. Orwig's (DAO), Justin 
-# Timothy Maxwell's (JTM), and Scott Warner's (SW) chronologies
+# get coordinates from all chronologies, but only colour the ones that are 
+# already added
 #-------------------------------------------------------------------------------
 siteMetaData <- readxl::read_excel (col_names = TRUE, 
   col_types = c ('numeric','text','text','text','text','text','text',
@@ -38,6 +42,8 @@ siteMetaData <- readxl::read_excel (col_names = TRUE,
   path = '../data/growth/chronologyData/siteMetaData.xlsx')
 siteMetaData <- siteMetaData %>% 
   mutate (colour = ifelse (species == 'ACRU', '#901c3bcc','#f3bd48cc'),
+          colour = ifelse (source %in% c ('SW', 'SP', 'TR', 'MG', 'BH', 'LO', 
+                                          'JW', 'CS'), '#eeeeeecc', colour),
           lon = as.numeric (lon),
           lat = as.numeric (lat))
 

@@ -7,8 +7,6 @@
 # load dependencies
 #-------------------------------------------------------------------------------
 if (!existsFunction ('%>%')) library ('tidyverse') # to generally process data
-if (!existsFunction ('as_date')) library ('lubridate') # to use as_date function
-if (!existsFunction ('nc_open')) library ('ncdf4')  # to manipulate netcdf files (climate)
 if (!exists ('rwEYSTI')) source ('wrangleGrowthData.R') # to load ring width data from all sites
 
 # wrangle data (NB.: This takes pretty long)
