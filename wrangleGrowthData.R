@@ -18,10 +18,10 @@ siteMetaData <- readxl::read_excel (
                  'logical','text','text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ('ITRDB','NP','JTM','BG')) %>%
+  filter (source %in% c ('ITRDB','NP','JTM','BG','SP')) %>%
   mutate (lon = as.numeric (lon),
           lat = as.numeric (lat))
-# NB: Still waiting for MG, SP and SW chronologies.
+# NB: Still waiting for MG and SW chronologies.
 
 # loop over files and load each of them into a tibble
 #-------------------------------------------------------------------------------
@@ -40,24 +40,29 @@ for (i in 1:dim (siteMetaData) [1]) {
   } else if (siteMetaData$source [i] == 'SW') {
     fPath <- '../data/growth/chronologyData/ScottWarnerCollection/'
   } else if (siteMetaData$source [i] == 'SP') {
-    fPath <- '../data/growth/chronologyData/SergePayetteCollection/'
+    fPath <- '../data/growth/chronologyData/SergePayetteCollection/Data_ACSA_SP.xlsx'
   }
   filename <- paste0 (fPath, siteMetaData$file [i])
   #print (filename)
   
   # read the rwl file
   if (siteMetaData$source [i] != 'SP') {
-    tmp <- read.rwl (fname = filename, format = 'tucson', 
-                     header = ifelse (is.na (siteMetaData$header [i]), TRUE, 
-                                      siteMetaData$header [i]))
+    tmp <- suppressMessages (
+      dplR::read.rwl (fname = filename, format = 'tucson', 
+                      header = ifelse (is.na (siteMetaData$header [i]), 
+                                       TRUE, 
+                                       siteMetaData$header [i])))
+    # add year as a row
+    tmp$year <- rownames (tmp)
   } else if (siteMetaData$source [i] == 'SP') {
-    tmp <- readxl::read_excel (
-      col_names = TRUE, 
-      path = filename, sheet = siteMetaData$labelPrefix [i])
+    tmp <- suppressMessages (
+      readxl::read_excel (col_names = TRUE, 
+                          path = fPath, # In this case this is the file name
+                          sheet = siteMetaData$file [i]) [-c (1:3), ])
+    names (tmp) [1] <- 'year'
   }
   
-  # add year as a row
-  tmp$year <- rownames (tmp)
+  
   
   # pivot to longer format and add tree and core specifiers depending on format
   if (siteMetaData$labelFormat [i] == 'TT-I') {
@@ -86,6 +91,13 @@ for (i in 1:dim (siteMetaData) [1]) {
                           values_to = 'rwEYSTI', names_sep = c (2,4),
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ('tree','core'))
+  } else if (siteMetaData$labelFormat [i] %in% c ('SSS-TT-I')) {
+    temp <- pivot_longer (tmp, cols = 2:(dim (tmp)[2]), 
+                          values_to = 'rwEYSTI', names_sep = '-',
+                          names_prefix = siteMetaData$labelPrefix [i],
+                          names_to = c ('tree','core')) %>% 
+      mutate (rwEYSTI = as.numeric (rwEYSTI) / 1000) # TR - Need to double check that precision of the file
+    # TR - Need to check that the types are correct
   }
   # delete row without ring width
   temp <- temp %>% filter (!is.na (rwEYSTI))
@@ -126,12 +138,12 @@ tempData <- tempData %>% mutate (treeID = NA, incrementCoreID = NA)
 tempData$treeID <- tempData %>% 
   group_by (site, tree) %>% 
   group_indices () %>% as.factor ()
-max (as.numeric (levels (tempData$treeID)))
+max (as.numeric (levels (tempData$treeID))) # number of trees
 tempData$incrementCoreID <- tempData %>% 
   group_by (site, tree, core) %>% 
   group_indices () %>% as.factor () 
-max (as.numeric (levels (tempData$incrementCoreID)))
-length (unique (tempData$site))
+max (as.numeric (levels (tempData$incrementCoreID))) # number of increment cores
+length (unique (tempData$site)) # number of sites
 
 # extract cardinal direction of the core
 #-------------------------------------------------------------------------------
