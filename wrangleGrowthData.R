@@ -39,14 +39,22 @@ for (i in 1:dim (siteMetaData) [1]) {
     fPath <- '../data/growth/chronologyData/ISFORT/BenoitGendreau-Berthiaume/'
   } else if (siteMetaData$source [i] == 'SW') {
     fPath <- '../data/growth/chronologyData/ScottWarnerCollection/'
+  } else if (siteMetaData$source [i] == 'SP') {
+    fPath <- '../data/growth/chronologyData/SergePayetteCollection/'
   }
   filename <- paste0 (fPath, siteMetaData$file [i])
   #print (filename)
   
   # read the rwl file
-  tmp <- read.rwl (fname = filename, format = 'tucson', 
-                   header = ifelse (is.na (siteMetaData$header [i]), TRUE, 
-                                    siteMetaData$header [i]))
+  if (siteMetaData$source [i] != 'SP') {
+    tmp <- read.rwl (fname = filename, format = 'tucson', 
+                     header = ifelse (is.na (siteMetaData$header [i]), TRUE, 
+                                      siteMetaData$header [i]))
+  } else if (siteMetaData$source [i] == 'SP') {
+    tmp <- readxl::read_excel (
+      col_names = TRUE, 
+      path = filename, sheet = siteMetaData$labelPrefix [i])
+  }
   
   # add year as a row
   tmp$year <- rownames (tmp)
