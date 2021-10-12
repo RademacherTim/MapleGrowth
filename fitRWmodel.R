@@ -28,17 +28,17 @@ hist (d$rwEYSTI [d$species == 'ACSA'],
 hist (d$rwEYSTI [d$species == 'ACRU'], 
       col = '#901c3b33', add = TRUE, breaks = seq (0, 18, by = 0.5))
 
-# transform ring width
+# transform ring width, so that I can use the log for transformation
 #-------------------------------------------------------------------------------
-data <- d %>% mutate (rwEYSTI = log (rwEYSTI + 1.5))
+data <- d %>% mutate (rwEYSTI = rwEYSTI + 1.2)
 
 # plot ring width data to show that transformation made is close to normal
 #-------------------------------------------------------------------------------
 par (mar = c (5, 5, 1, 1))
-hist (data$rwEYSTI [data$species == 'ACSA'], 
+hist (log (data$rwEYSTI [data$species == 'ACSA']), 
       xlab = expression (paste ('log (',rw['y,s'],' + 1.5)', sep = '')),
       main = '', col = '#f3bd4833', xlim = c (0, 3.5), breaks = seq (0, 3.5, by = 0.1))
-hist (data$rwEYSTI [data$species == 'ACRU'], 
+hist (log (data$rwEYSTI [data$species == 'ACRU']), 
       col = '#901c3b33', add = TRUE, breaks = seq (0, 3.5, by = 0.1))
 
 # let's start with sugar maple only, because red maple does not have enough 
@@ -46,6 +46,10 @@ hist (data$rwEYSTI [data$species == 'ACRU'],
 # N.B.: Integrate species as a variable in the model eventually
 #-------------------------------------------------------------------------------
 data <- data %>% dplyr::filter (species == 'ACSA') %>% select (-species)
+
+# select only sites with coordinates, thus climate data for now
+#-------------------------------------------------------------------------------
+data <- data %>% dplyr::filter (site != 130)
 
 # average by tree for now
 #-------------------------------------------------------------------------------

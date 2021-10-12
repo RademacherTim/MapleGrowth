@@ -44,9 +44,9 @@ d <- rwEYSTI %>% mutate (tasJan0 = NA, preJan0 = NA, # current January   climate
 time0 <- Sys.time ()
 for (s in 1:dim (siteMetaData) [1]) {
   
-  # jump site 117 until I get the coordinates from BG
+  # jump site 117 until I get the coordinates from BG and SP
   #-----------------------------------------------------------------------------
-  if (siteMetaData$site [s] == 117) next
+  if (siteMetaData$site [s] %in% c (117, 135:161)) next
   
   # print site number to see progress
   #-----------------------------------------------------------------------------

@@ -104,6 +104,8 @@ for (i in 1:dim (siteMetaData) [1]) {
   
   # add site name before adding it to the rwYSTI tibble
   temp <- temp %>% dplyr::mutate (site = siteMetaData$site [i], 
+                                  lat = siteMetaData$lat [i],
+                                  lon = siteMetaData$lon [i],
                                   species = siteMetaData$species [i],
                                   .before = tree)
   
@@ -174,7 +176,7 @@ rwEYSTI <- rwEYSTI %>% select (-cardinalDir, -core, -tree)
 # reorder in terms of model subscripts (i.e., 'E' for species, 'Y' for year, 
 # 'S' for sites, 'T' for tree, and 'I' for increment core)
 #-------------------------------------------------------------------------------
-rwEYSTI <- rwEYSTI %>% relocate (rwEYSTI, species, year, site, treeID, incrementCoreID)
+rwEYSTI <- rwEYSTI %>% relocate (rwEYSTI, species, year, site, lat, lon, treeID, incrementCoreID)
 
 # make histogram of ring widths
 #-------------------------------------------------------------------------------
