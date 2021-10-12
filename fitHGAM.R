@@ -18,6 +18,11 @@ data <- d %>% mutate (rwEYSTI = rwEYSTI + 1.2)
 #-------------------------------------------------------------------------------
 data <- data %>% dplyr::filter (species == 'ACSA') %>% select (-species)
 
+# select only sites with coordinates, thus climate data for now
+#-------------------------------------------------------------------------------
+data <- data %>% dplyr::filter (site != 130)
+
+
 # start with model with a model of site specific growth as a 
 #-------------------------------------------------------------------------------
 modGlobal <- gam (log (rwEYSTI + 1) ~ s (site, bs = 're'),
