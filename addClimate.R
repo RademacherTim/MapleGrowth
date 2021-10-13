@@ -172,7 +172,7 @@ for (s in 1:dim (siteMetaData) [1]) {
 } # close loop over sites
 time1 <- Sys.time ()
 time1 - time0 
-# currently takes about 1 hour and a half for 52 sites with files on external 
+# currently takes about 4.4 hours for 122 sites with files on external 
 # hard drive. Access to external hard drive slows this substantially.
 
 # make histogram of mean January temperatures
