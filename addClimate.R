@@ -153,13 +153,13 @@ for (s in 1:dim (siteMetaData) [1]) {
       
       # add mean period air surface temperature to the data 
       #-------------------------------------------------------------------------
-      d [which (d$site == siteMetaData$site [s]), 9 + 2 * (m - 1)] <- 
+      d [which (d$site == siteMetaData$site [s] & d$year == y), 9 + 2 * (m - 1)] <- 
         tas  [doyStart:doyEnd] %>% 
         mean ()
       
       # add total period precipitation to the data 
       #-------------------------------------------------------------------------
-      d [which (d$site == siteMetaData$site [s]), 10 + 2 * (m - 1)] <- 
+      d [which (d$site == siteMetaData$site [s] & d$year == y), 10 + 2 * (m - 1)] <- 
         prcp [doyStart:doyEnd] %>% 
         sum ()
     }  # close loop over months
