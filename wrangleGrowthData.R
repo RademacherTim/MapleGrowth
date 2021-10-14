@@ -18,7 +18,7 @@ siteMetaData <- readxl::read_excel (
                  'logical','text','text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ('ITRDB','NP','JTM','BG')) %>% # TR - Not including 'SP' and 'SW' as the data is still incomplete (coordinates and ring widths missing, respectively)
+  filter (source %in% c ('ITRDB','NP','JTM','BG','SP')) %>% # TR - Not including 'SW' as the data is still incomplete (ring widths missing)
   mutate (lon = as.numeric (lon),
           lat = as.numeric (lat))
 # NB: Still waiting for MG and SW chronologies.

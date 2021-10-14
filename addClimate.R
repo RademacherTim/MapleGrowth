@@ -44,10 +44,6 @@ d <- rwEYSTI %>% mutate (tasJan0 = NA, preJan0 = NA, # current January   climate
 time0 <- Sys.time ()
 for (s in 1:dim (siteMetaData) [1]) {
   
-  # jump site 117 until I get the coordinates from BG and SP
-  #-----------------------------------------------------------------------------
-  if (siteMetaData$site [s] %in% c (117, 135:161)) next
-  
   # print site number to see progress
   #-----------------------------------------------------------------------------
   print (s)
@@ -63,7 +59,7 @@ for (s in 1:dim (siteMetaData) [1]) {
   # find 0.25 by 0.25 degree grid cell that contains the site s
   #-----------------------------------------------------------------------------
   lat <- ceiling (siteMetaData$lat [s] / res) * res - (res / 2)
-  lon <- floor (siteMetaData$lon [s] / res) * res - (res / 2)
+  lon <- floor (siteMetaData$lon [s] / res) * res + (res / 2)
   
   # convert latitude and longitude to index used in netcdf files
   #-----------------------------------------------------------------------------
@@ -77,12 +73,12 @@ for (s in 1:dim (siteMetaData) [1]) {
 
   # read grid cell elevation from climate data and add it to the metaData
   #-----------------------------------------------------------------------------
-  nc_elev <- nc_open (file = paste0 (dirString,'elevation_0.25deg.nc'))
-  siteMetaData$eleClim [s] <- 
-    ncvar_get (nc_elev, "elev", 
-               start = c (iLon, iLat2, 1, 1), 
-               count = c (1, 1, 1, 1))
-  nc_close (nc_elev); rm (nc_elev)
+  # nc_elev <- nc_open (file = paste0 (dirString,'elevation_0.25deg.nc'))
+  # siteMetaData$eleClim [s] <- 
+  #   ncvar_get (nc_elev, "elev", 
+  #              start = c (iLon, iLat2, 1, 1), 
+  #              count = c (1, 1, 1, 1))
+  # nc_close (nc_elev); rm (nc_elev)
   
   # loop over years for each site
   #-----------------------------------------------------------------------------
