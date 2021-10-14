@@ -23,11 +23,33 @@ data <- data %>% mutate (rwEYSTI = rwEYSTI + 1.2)
 #-------------------------------------------------------------------------------
 data <- data %>% dplyr::filter (site != 130)
 
-# start with model with a model of site specific growth as a 
+# start with model with a model of site- and tree-specific growth factors 
+# (random effects) and a temporal autocorrelation of the residuals with a lag of 
+# one year
 #-------------------------------------------------------------------------------
-modGlobal <- gam (log (rwEYSTI) ~ s (site, bs = 're'),
-                  correlation = corAR1 (form = ~ year | site),
-                  data = rwEYSTI, 
-                  method = 'REML', 
-                  family = 'gaussian')
+time0 <- Sys.time ()
+modNull <- gam (log (rwEYSTI) ~ s (site, bs = 're') + 
+                  s (treeID, bs = 're'),
+                correlation = corAR1 (form = ~ year | treeID),
+                data = data, 
+                method = 'REML', 
+                family = 'gaussian')
+time1 <- Sys.time ()
+time1 - time0 
+check.gam (modNull)
+
+# model that includes latitude as a proxy for photoperiod on top of site- and 
+# tree-specific growth factors (random effects) and a temporal autocorrelation 
+# of the residuals with a lag of one year.
+#-------------------------------------------------------------------------------
+modNull <- gam (log (rwEYSTI) ~ s (site, bs = 're') + 
+                  s (treeID, bs = 're') + 
+                  s (lat),
+                correlation = corAR1 (form = ~ year | treeID),
+                data = data, 
+                method = 'REML', 
+                family = 'gaussian')
+check.gam (modNull)
+
+
 #===============================================================================

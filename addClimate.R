@@ -63,7 +63,7 @@ for (s in 1:dim (siteMetaData) [1]) {
   # find 0.25 by 0.25 degree grid cell that contains the site s
   #-----------------------------------------------------------------------------
   lat <- ceiling (siteMetaData$lat [s] / res) * res - (res / 2)
-  lon <- ceiling (siteMetaData$lon [s] / res) * res - (res / 2)
+  lon <- floor (siteMetaData$lon [s] / res) * res - (res / 2)
   
   # convert latitude and longitude to index used in netcdf files
   #-----------------------------------------------------------------------------
@@ -172,7 +172,7 @@ for (s in 1:dim (siteMetaData) [1]) {
 } # close loop over sites
 time1 <- Sys.time ()
 time1 - time0 
-# currently takes about 4.4 hours for 122 sites with files on external 
+# currently takes about 3.4 hours for 122 sites with files on external 
 # hard drive. Access to external hard drive slows this substantially.
 
 # make histogram of mean January temperatures
@@ -183,15 +183,15 @@ PLOT <- FALSE; if (PLOT) {
   hist (d$tasJan0, 
         xlab = expression (paste ('Mean january temperatures (',degree,'C)', 
                                   sep = '')), 
-        main = '', col = '#EB99A999', xlim = c (-20, 10), ylim = c (0, 18000), 
+        main = '', col = '#EB99A999', xlim = c (-20, 10), ylim = c (0, 35000), 
         las = 1, lty = 1, lwd = 1, ylab = '', axes = FALSE)
   axis (side = 1, seq (-20, 10, 5))
-  axis (side = 2, seq (0, 18000, 3000), las = 1)
+  axis (side = 2, at = seq (0, 35000, 5000), las = 1)
   mtext (side = 2, text = "Frequency", line = 3)
   mtext (side = 4, text = "Density", line = 3)
-  rhoTas <- density (d$tasJan0, na.rm = TRUE)
+  rhoTas <- density (d$tasJan0, na.rm = TRUE, bw = 0.9)
   par (new = TRUE)
-  plot (rhoTas, ylim = c (0, 0.2), axes = FALSE, col = '#901C3B', lwd = 3, 
+  plot (rhoTas, ylim = c (0, 0.12), axes = FALSE, col = '#901C3B', lwd = 3, 
         main = "", xlab = "", ylab = "")
   axis (side = 4, las = 1)
   dev.off ()

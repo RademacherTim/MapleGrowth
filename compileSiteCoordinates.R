@@ -8,11 +8,10 @@
 #     - Scott Warner                   (SW)       - FALSE
 #     - David A. Orwig                 (DAO)      - TRUE
 #     - Tim Rademacher                 (TR)       - FALSE
-#     - Serge Payette                  (SP)       - FALSE
+#     - Serge Payette                  (SP)       - TRUE
 #     - Martin Girardin                (MG)       - FALSE
 #     - Brett Huggett                  (BH)       - FALSE
 #     - Loic D'Orangeville             (LO)       - FALSE
-#     - Jay Wasom                      (JW)       - FALSE
 #     - Chistina Stinson               (CS)       - FALSE
 #-------------------------------------------------------------------------------
 
@@ -42,8 +41,8 @@ siteMetaData <- readxl::read_excel (col_names = TRUE,
   path = '../data/growth/chronologyData/siteMetaData.xlsx')
 siteMetaData <- siteMetaData %>% 
   mutate (colour = ifelse (species == 'ACRU', '#901c3bcc','#f3bd48cc'),
-          colour = ifelse (source %in% c ('SW', 'SP', 'TR', 'MG', 'BH', 'LO', 
-                                          'JW', 'CS'), '#eeeeeecc', colour),
+          colour = ifelse (source %in% c ('SW', 'TR', 'MG', 'BH', 'LO', 
+                                          'CS'), '#eeeeeecc', colour),
           lon = as.numeric (lon),
           lat = as.numeric (lat))
 
