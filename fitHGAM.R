@@ -14,21 +14,20 @@ if (!existsFunction ('gam')) library ('mgcv') # to fit HGAM
 #-------------------------------------------------------------------------------
 data <- d %>% dplyr::filter (species == 'ACSA') %>% select (-species)
 
-# transform ring width, so that I can use the log for transformation
+# average by tree for now
 #-------------------------------------------------------------------------------
-data <- data %>% mutate (rwEYSTI = rwEYSTI + 1.2)
-# Is there a better way to deal with offset to include it in prediction?
-
-# select only sites with coordinates, thus climate data for now
-#-------------------------------------------------------------------------------
-data <- data %>% dplyr::filter (site != 130)
+data <- data %>% group_by (year, site, lat, lon, treeID, tasJan0, preJan0, 
+                           tasFeb0, preFeb0, tasMar0, preMar0, tasApr0, preApr0, 
+                           tasMay0, preMay0, tasJun0, preJun0, tasJul0, preJul0, 
+                           tasAug0, preAug0, tasSep0, preSep0) %>% 
+  summarise (rwYST = mean (rwEYSTI), .groups = 'drop') %>% relocate (rwYST, .before = 1)
 
 # start with model with a model of site- and tree-specific growth factors 
 # (random effects) and a temporal autocorrelation of the residuals with a lag of 
 # one year
 #-------------------------------------------------------------------------------
 time0 <- Sys.time ()
-modNull <- gam (log (rwEYSTI) ~ s (site, bs = 're') + 
+modNull <- gam (log (rwYST + 1) ~ s (site, bs = 're') + 
                   s (treeID, bs = 're'),
                 correlation = corAR1 (form = ~ year | treeID),
                 data = data, 
@@ -36,6 +35,7 @@ modNull <- gam (log (rwEYSTI) ~ s (site, bs = 're') +
                 family = 'gaussian')
 time1 <- Sys.time ()
 time1 - time0 
+summary (modNull)
 check.gam (modNull)
 
 # model that includes latitude as a proxy for photoperiod on top of site- and 

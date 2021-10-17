@@ -25,7 +25,7 @@ dates <- seq (from = as_date ('1948-01-01'),
 # add elevation of climate data to siteMetaData to compare the elevation of the 
 # actual stands versus the elevation to which weather is calibrated
 #-------------------------------------------------------------------------------
-siteMetaData <- siteMetaData %>% mutate (eleClim = NA)
+#siteMetaData <- siteMetaData %>% mutate (eleClim = NA)
 
 # add tas column for mean summer temperature of the growing site
 #-------------------------------------------------------------------------------
@@ -168,7 +168,7 @@ for (s in 1:dim (siteMetaData) [1]) {
 } # close loop over sites
 time1 <- Sys.time ()
 time1 - time0 
-# currently takes about 3.4 hours for 122 sites with files on external 
+# currently takes about 3.4 hours for 149 sites with files on external 
 # hard drive. Access to external hard drive slows this substantially.
 
 # make histogram of mean January temperatures
@@ -176,10 +176,10 @@ time1 - time0
 PLOT <- FALSE; if (PLOT) {
   png (file = "../fig/janTemperaturesHist.png")
   par (mar = c (5, 5, 1, 5))
-  hist (d$tasJan0, 
+  hist (d$tasJul0, 
         xlab = expression (paste ('Mean january temperatures (',degree,'C)', 
                                   sep = '')), 
-        main = '', col = '#EB99A999', xlim = c (-20, 10), ylim = c (0, 35000), 
+        main = '', col = '#EB99A999', xlim = c (-20, 10), ylim = c (0, 40000), 
         las = 1, lty = 1, lwd = 1, ylab = '', axes = FALSE)
   axis (side = 1, seq (-20, 10, 5))
   axis (side = 2, at = seq (0, 35000, 5000), las = 1)

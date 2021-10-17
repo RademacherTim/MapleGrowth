@@ -30,60 +30,111 @@ hist (d$rwEYSTI [d$species == 'ACRU'],
 
 # transform ring width, so that I can use the log for transformation
 #-------------------------------------------------------------------------------
-data <- d %>% mutate (rwEYSTI = rwEYSTI + 1.2)
+#d2 <- d %>% mutate (rwEYSTI = rwEYSTI + 1.2)
 
 # plot ring width data to show that transformation made is close to normal
 #-------------------------------------------------------------------------------
 par (mar = c (5, 5, 1, 1))
-hist (log (data$rwEYSTI [data$species == 'ACSA']), 
+hist (log (d2$rwEYSTI [d2$species == 'ACSA']), 
       xlab = expression (paste ('log (',rw['y,s'],' + 1.5)', sep = '')),
       main = '', col = '#f3bd4833', xlim = c (0, 3.5), breaks = seq (0, 3.5, by = 0.1))
-hist (log (data$rwEYSTI [data$species == 'ACRU']), 
+hist (log (d2$rwEYSTI [d2$species == 'ACRU']), 
       col = '#901c3b33', add = TRUE, breaks = seq (0, 3.5, by = 0.1))
 
 # let's start with sugar maple only, because red maple does not have enough 
 # samples to represent entire distribution
 # N.B.: Integrate species as a variable in the model eventually
 #-------------------------------------------------------------------------------
-data <- data %>% dplyr::filter (species == 'ACSA') %>% select (-species)
-
-# select only sites with coordinates, thus climate data for now
-#-------------------------------------------------------------------------------
-data <- data %>% dplyr::filter (site != 130)
+d3 <- d %>% dplyr::filter (species == 'ACSA') %>% select (-species)
 
 # average by tree for now
 #-------------------------------------------------------------------------------
-data <- data %>% group_by (year, site, treeID, tasJan0, preJan0, tasFeb0, preFeb0, 
-                           tasMar0, preMar0, tasApr0, preApr0, tasMay0, preMay0, 
-                           tasJun0, preJun0, tasJul0, preJul0, tasAug0, preAug0, 
-                           tasSep0, preSep0) %>% 
+d4 <- d3 %>% group_by (year, site, treeID, tasJan0, preJan0, tasFeb0, preFeb0, 
+                       tasMar0, preMar0, tasApr0, preApr0, tasMay0, preMay0, 
+                       tasJun0, preJun0, tasJul0, preJul0, tasAug0, preAug0, 
+                       tasSep0, preSep0) %>% 
   summarise (rwYST = mean (rwEYSTI), .groups = 'drop') %>% relocate (rwYST, .before = 1)
+
+# average by site
+#-------------------------------------------------------------------------------
+d5 <- d4 %>% 
+  group_by (year, site, tasJan0, preJan0, tasFeb0, preFeb0, 
+            tasMar0, preMar0, tasApr0, preApr0, tasMay0, preMay0, 
+            tasJun0, preJun0, tasJul0, preJul0, tasAug0, preAug0, 
+            tasSep0, preSep0) %>%
+  summarise (rwYS = mean (rwYST), .groups = 'drop') %>% relocate (rwYS, .before = 1)
 
 # average climate data to annual mean temperature and annual total precipitation
 #-------------------------------------------------------------------------------
-data <- data %>% 
-  group_by (rwYST, year, site, treeID) %>%
+d6 <- d5 %>% 
+  group_by (rwYS, year, site) %>%
   summarise (tas0 = mean (tasJan0, tasFeb0, tasMar0, tasApr0, tasMay0, tasJun0, 
                           tasJul0, tasAug0, tasSep0),
              pre0 = sum (preJan0, preFeb0, preMar0, preApr0, preMay0, preJun0, 
                          preJul0, preAug0, preSep0),
              .groups = 'drop')
 
-# fit a NULL model using brms
+# fit a NULL with a random site effect only
+# Initial tests showed that a at-0 truncated skewed-normal distribution best 
+# fits the response distribution. I also tested log-normal and normal with and 
+# without truncation and a simple skewed normal distribution. According to WAIC 
+# and LOO the skewed normal distribution was the best model with at-zero 
+# truncated skewed-normal distribution in close second and all other 
+# substantially worse.
 #-------------------------------------------------------------------------------
-formula0 <- bf (rwYST ~ (1 | site) + (1 | treeID) +
-                  tas0 + pre0 +
-                  ar (time = year, gr = treeID, p = 1)) # not sure the group for the auto-correlative term is correct
+formula0 <- bf (rwYS | trunc (lb = 0) ~ (1 | site)) 
 time0 <- Sys.time ()
-mod0 <- brm (family = 'gaussian',
+mod0 <- brm (family = skewed_normal (link = 'identity'),
              formula = formula0,
-             data = data)
+             data = d6,
+             cores = 1,
+             chains = 1,
+             iter = 6000) # Default is 2000, needed to increase this, as the chains did not mix well resulting in low Bulk Effective Sample Sizes and low Tail Effective Sample Sizes otherwise 
+time1 <- Sys.time ()
+time1 - time0
+summary (mod0)
+summary (mod4)
+waic (mod0)
+loo (mod0)
+get_variables (mod0)
+plot.brmsfit (mod0)
+
+# fit a NULL with a random site effect, mean annual temperature and total annual 
+# precipitation and temporal autoregressive component
+#-------------------------------------------------------------------------------
+formula0 <- bf (rwYS ~ (1 | site) +
+                  tas0 + pre0 +
+                  ar (time = year, gr = site, p = 1)) 
+time0 <- Sys.time ()
+mod0 <- brm (family = gaussian (link = 'log'),
+             formula = formula0,
+             data = d6,
+             cores = 1,
+             chains = 1)
 time1 <- Sys.time ()
 time1 - time0
 summary (mod0)
 conditional_effects (mod0)
-postMod0 <- as_draws (mod0)
-posterior::summarize_draws(postMod0)[2, ]
+
+# There are clearly some problems with this model, as it extends to very large rw
+
+# Fit non-linear effects for tas0 and pre0 as they are unlikely to be linear, 
+# based on the biology of optimum temperatures and water supply on tree growth
+#-------------------------------------------------------------------------------
+formula0 <- bf (rwYS ~ (1 | site) +
+                  s (tas0) + s (pre0) +
+                  ar (time = year, gr = site, p = 1)) 
+time0 <- Sys.time ()
+mod0 <- brm (family = gaussian (link = 'log'),
+             formula = formula0,
+             data = d6,
+             cores = 1,
+             chains = 1, 
+             iter = 4000) # Default is 2000, needed to increase this, as the chains did not mix well resulting in low Bulk Effective Sample Sizes and low Tail Effective Sample Sizes otherwise 
+time1 <- Sys.time ()
+time1 - time0
+summary (mod0)
+conditional_effects (mod0)
 
 # fit a model including between-tree (within-site varibility) using brms
 #-------------------------------------------------------------------------------
