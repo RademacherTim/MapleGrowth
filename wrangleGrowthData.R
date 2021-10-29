@@ -18,7 +18,7 @@ siteMetaData <- readxl::read_excel (
                  'logical','text','text','text'),
   path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ('ITRDB','NP','JTM','BG','SP')) %>% # TR - Not including 'SW' as the data is still incomplete (ring widths missing)
+  filter (source %in% c ('ITRDB','NP','JTM','BG','SP', 'SF')) %>% # TR - Not including 'SW' as the data is still incomplete (ring widths missing)
   mutate (lon = as.numeric (lon),
           lat = as.numeric (lat))
 # NB: Still waiting for MG and SW chronologies.
@@ -41,25 +41,27 @@ for (i in 1:dim (siteMetaData) [1]) {
     fPath <- '../data/growth/chronologyData/ScottWarnerCollection/'
   } else if (siteMetaData$source [i] == 'SP') {
     fPath <- '../data/growth/chronologyData/SergePayetteCollection/Data_ACSA_SP.xlsx'
+  } else if (siteMetaData$source [i] == 'SF') {
+    fPath <- '../data/growth/chronologyData/ShawnFraverCollection/'
   }
   filename <- paste0 (fPath, siteMetaData$file [i])
   #print (filename)
   
   # read the rwl file
-  if (siteMetaData$source [i] != 'SP') {
-    tmp <- suppressMessages (
-      dplR::read.rwl (fname = filename, format = 'tucson', 
-                      header = ifelse (is.na (siteMetaData$header [i]), 
-                                       TRUE, 
-                                       siteMetaData$header [i])))
-    # add year as a row
-    tmp$year <- rownames (tmp)
-  } else if (siteMetaData$source [i] == 'SP') {
+  if (siteMetaData$source [i] == 'SP') {
     tmp <- suppressMessages (
       readxl::read_excel (col_names = TRUE, 
                           path = fPath, # In this case this is the file name
                           sheet = siteMetaData$file [i]) [-c (1:3), ])
     names (tmp) [1] <- 'year'
+  } else if (siteMetaData$source [i] != 'SP') {
+    tmp <- suppressMessages (
+      dplR::read.rwl (fname = filename, format = 'tucson', 
+                      header = ifelse (is.na (siteMetaData$header [i]), 
+                                       TRUE, 
+                                       siteMetaData$header [i])))
+    # add year as a seperate row
+    tmp$year <- rownames (tmp)
   }
   
   
@@ -86,7 +88,8 @@ for (i in 1:dim (siteMetaData) [1]) {
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ('tree','core'))
     if (siteMetaData$site [i] %in% c (23:26)) temp$core <- '1'
-  } else if (siteMetaData$labelFormat [i] %in% c ('SSSSTTII')) {
+  } else if (siteMetaData$labelFormat [i] %in% c ('SSSSTTII','SSSS-TT','SSS-TT',
+                                                  'SS-TT')) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
                           values_to = 'rwEYSTI', names_sep = c (2,4),
                           names_prefix = siteMetaData$labelPrefix [i],
@@ -101,6 +104,9 @@ for (i in 1:dim (siteMetaData) [1]) {
   }
   # delete row without ring width
   temp <- temp %>% filter (!is.na (rwEYSTI))
+  
+  # add incrementCoreID for SF collection
+  if (siteMetaData$source [i] == 'SF') temp$core <- '1'
   
   # add site name before adding it to the rwYSTI tibble
   temp <- temp %>% dplyr::mutate (site = siteMetaData$site [i], 

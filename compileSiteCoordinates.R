@@ -13,21 +13,18 @@
 #     - Brett Huggett                  (BH)       - FALSE
 #     - Loic D'Orangeville             (LO)       - FALSE
 #     - Chistina Stinson               (CS)       - FALSE
+#     = Shawn Fraver                   (SF)       - TRUE
 #-------------------------------------------------------------------------------
 
 # load dependencies
 #-------------------------------------------------------------------------------
 if (!existsFunction ('%>%')) library ('tidyverse')
-library ('ggplot2')
-library ('ggmap')
-library ('maps')
-library ('mapdata') # needed for Canadian borders
-library ('maptools')
-library ('broom')
-library ('sf')
+if (!existsFunction ('ggplot')) library ('ggplot2')
+#library ('ggmap')
+if (!existsFunction ('map_data')) library ('mapdata') # needed for Canadian borders
+if (!existsFunction ('st_read')) library ('sf')
 #library ('rnaturalearth')
 #library ('rnaturalearthdata')
-library ('lubridate')
 if (!existsFunction ('readxl')) library ('readxl')
 library ('tiff')
 
