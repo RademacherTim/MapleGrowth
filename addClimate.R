@@ -350,7 +350,10 @@ for (s in 1:dim (siteMetaData) [1]) {
     sitePDSIData <- add_row (sitePDSIData, as_tibble (t (scPDSI$X)))
   }
 }
-# change names of sitePDSIData
+
+# change names of monthly scPDSI data for consistency with temperature and 
+# precipitation data
+#-------------------------------------------------------------------------------
 sitePDSIData <- sitePDSIData %>% 
   dplyr:: rename ('Jan-1948' =   V1, 'Feb-1948' =   V2, 'Mar-1948' =   V3, 'Apr-1948' =   V4, 'May-1948' =   V5, 'Jun-1948' =   V6, 'Jul-1948' =   V7, 'Aug-1948' =   V8, 'Sep-1948' =   V9, 'Oct-1948' =  V10, 'Nov-1948' =  V11, 'Dec-1948' =  V12,
                   'Jan-1949' =  V13, 'Feb-1949' =  V14, 'Mar-1949' =  V15, 'Apr-1949' =  V16, 'May-1949' =  V17, 'Jun-1949' =  V18, 'Jul-1949' =  V19, 'Aug-1949' =  V20, 'Sep-1949' =  V21, 'Oct-1949' =  V22, 'Nov-1949' =  V23, 'Dec-1949' =  V24,

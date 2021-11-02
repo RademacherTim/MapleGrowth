@@ -182,7 +182,8 @@ rwEYSTI <- rwEYSTI %>% select (-cardinalDir, -core, -tree)
 # reorder in terms of model subscripts (i.e., 'E' for species, 'Y' for year, 
 # 'S' for sites, 'T' for tree, and 'I' for increment core)
 #-------------------------------------------------------------------------------
-rwEYSTI <- rwEYSTI %>% relocate (rwEYSTI, species, year, site, lat, lon, treeID, incrementCoreID)
+rwEYSTI <- rwEYSTI %>% 
+  relocate (rwEYSTI, species, year, site, treeID, incrementCoreID, lat, lon)
 
 # make histogram of ring widths
 #-------------------------------------------------------------------------------
@@ -209,6 +210,12 @@ PLOT <- FALSE; if (PLOT) {
   mtext (side = 4, line = 4, text = 'Density')
   dev.off ()
 }
+
+# average by tree
+#-------------------------------------------------------------------------------
+rwEYST <- rwEYSTI %>% group_by (species, year, site, treeID, lat, lon) %>%
+  summarise (rwEYST = mean (rwEYSTI, na.rm = TRUE), .groups = 'drop') %>% 
+  relocate (rwEYST, species, year, site, treeID, lat, lon)
 
 # clean up
 #-------------------------------------------------------------------------------
