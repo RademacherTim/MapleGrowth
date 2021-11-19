@@ -8,6 +8,8 @@ if (!existsFunction ('%>%')) library ('tidyverse') # to generally process data
 if (!existsFunction ('as_date')) library ('lubridate') # to use as_date function
 if (!existsFunction ('nc_open')) library ('ncdf4')  # to manipulate netcdf files (climate)
 if (!exists ('rwEYSTI')) source ('wrangleGrowthData.R') # to load ring width data from all sites
+if (!existsFunction ('thornthwaite')) library ('SPEI') # to calculate the potential evapotranspiration
+if (!existsFunction ('pdsi')) library ('scPDSI') # to calculate the scPDSI
 
 # initialise spatial resolution for climate data
 #-------------------------------------------------------------------------------
@@ -195,8 +197,9 @@ for (s in 1:dim (siteMetaData) [1]) {
   #-----------------------------------------------------------------------------
   startYear <- ifelse (siteMetaData$start [s] < 1948, 1948, 
                        siteMetaData$start [s])
-  endYear <-  ifelse (siteMetaData$end [s] > 2016, 2016, 
-                      siteMetaData$end [s])
+  endYear <-  2016 #ifelse (siteMetaData$end [s] > 2016, 2016, 
+                   #    siteMetaData$end [s])
+                   # Just use 2016 as the final year. 
   
   
   # find 0.25 by 0.25 degree grid cell that contains the site s
