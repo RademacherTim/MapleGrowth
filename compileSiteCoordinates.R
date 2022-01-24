@@ -13,7 +13,7 @@
 #     - Brett Huggett                  (BH)       - FALSE
 #     - Loic D'Orangeville             (LO)       - FALSE
 #     - Chistina Stinson               (CS)       - FALSE
-#     = Shawn Fraver                   (SF)       - TRUE
+#     - Shawn Fraver                   (SF)       - TRUE
 #-------------------------------------------------------------------------------
 
 # load dependencies
