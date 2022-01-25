@@ -11,35 +11,35 @@
 #     - Serge Payette                  (SP)       - TRUE
 #     - Martin Girardin                (MG)       - FALSE
 #     - Brett Huggett                  (BH)       - FALSE
-#     - Loic D'Orangeville             (LO)       - FALSE
+#     - Loic D'Orangeville             (LD)       - TRUE
 #     - Chistina Stinson               (CS)       - FALSE
 #     - Shawn Fraver                   (SF)       - TRUE
 #-------------------------------------------------------------------------------
 
 # load dependencies
 #-------------------------------------------------------------------------------
-if (!existsFunction ('%>%')) library ('tidyverse')
-if (!existsFunction ('ggplot')) library ('ggplot2')
-#library ('ggmap')
-if (!existsFunction ('map_data')) library ('mapdata') # needed for Canadian borders
-if (!existsFunction ('st_read')) library ('sf')
-#library ('rnaturalearth')
-#library ('rnaturalearthdata')
-if (!existsFunction ('readxl')) library ('readxl')
-library ('tiff')
+if (!existsFunction ("%>%")) library ("tidyverse")
+if (!existsFunction ("ggplot")) library ("ggplot2")
+#library ("ggmap")
+if (!existsFunction ("map_data")) library ("mapdata") # needed for Canadian borders
+if (!existsFunction ("st_read")) library ("sf")
+#library ("rnaturalearth")
+#library ("rnaturalearthdata")
+if (!existsFunction ("readxl")) library ("readxl")
+library ("tiff")
 
 # get coordinates from all chronologies, but only colour the ones that are 
 # already added
 #-------------------------------------------------------------------------------
 siteMetaData <- readxl::read_excel (col_names = TRUE, 
-  col_types = c ('numeric','text','text','text','text','text','text',
-                 'numeric','numeric','numeric','numeric','numeric','text',
-                 'logical','text','text','text'),
-  path = '../data/growth/chronologyData/siteMetaData.xlsx')
+  col_types = c ("numeric","text","text","text","text","text","text",
+                 "numeric","numeric","numeric","numeric","numeric","text",
+                 "logical","text","text","text"),
+  path = "../data/growth/chronologyData/siteMetaData.xlsx")
 siteMetaData <- siteMetaData %>% 
-  mutate (colour = ifelse (species == 'ACRU', '#901c3bcc','#f3bd48cc'),
-          colour = ifelse (source %in% c ('SW', 'TR', 'MG', 'BH', 'LO', 
-                                          'CS'), '#eeeeeecc', colour),
+  mutate (colour = ifelse (species == "ACRU", "#901c3bcc","#f3bd48cc"),
+          colour = ifelse (source %in% c ("SW", "TR", "MG", "BH", "CS"), 
+                           "#eeeeeecc", colour),
           lon = as.numeric (lon),
           lat = as.numeric (lat))
 

@@ -5,20 +5,20 @@
 
 # load dependencies
 #-------------------------------------------------------------------------------
-if (!existsFunction ('%>%')) library ('tidyverse') # to generally process data
-if (!existsFunction ('readxl')) library ('readxl') # to read metadata
-if (!existsFunction ('read.rwl')) library ('dplR') # to read chronology files
+if (!existsFunction ("%>%")) library ("tidyverse") # to generally process data
+if (!existsFunction ("readxl")) library ("readxl") # to read metadata
+if (!existsFunction ("read.rwl")) library ("dplR") # to read chronology files
 
 # get metadata for all chronologies with file
 #-------------------------------------------------------------------------------
 siteMetaData <- readxl::read_excel (
   col_names = TRUE, 
-  col_types = c ('numeric','text','text','text','text','text','text',
-                 'numeric','numeric','numeric','numeric','numeric','text',
-                 'logical','text','text','text'),
-  path = '../data/growth/chronologyData/siteMetaData.xlsx') %>% 
+  col_types = c ("numeric","text","text","text","text","text","text",
+                 "numeric","numeric","numeric","numeric","numeric","text",
+                 "logical","text","text","text"),
+  path = "../data/growth/chronologyData/siteMetaData.xlsx") %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ('ITRDB','NP','JTM','BG','SP', 'SF')) %>% # TR - Not including 'SW' as the data is still incomplete (ring widths missing)
+  filter (source %in% c ("ITRDB","NP","JTM","BG","SP", "SF","LD")) %>% # TR - Not including 'SW' as the data is still incomplete (ring widths missing)
   mutate (lon = as.numeric (lon),
           lat = as.numeric (lat))
 # NB: Still waiting for MG and SW chronologies.
@@ -43,6 +43,8 @@ for (i in 1:dim (siteMetaData) [1]) {
     fPath <- '../data/growth/chronologyData/SergePayetteCollection/Data_ACSA_SP.xlsx'
   } else if (siteMetaData$source [i] == 'SF') {
     fPath <- '../data/growth/chronologyData/ShawnFraverCollection/'
+  } else if (siteMetaData$source [i] == 'LD') {
+    fPath <- '../data/growth/chronologyData/LoicDOrangevilleCollection/'
   }
   filename <- paste0 (fPath, siteMetaData$file [i])
   #print (filename)
@@ -91,22 +93,26 @@ for (i in 1:dim (siteMetaData) [1]) {
   } else if (siteMetaData$labelFormat [i] %in% c ('SSSSTTII','SSSS-TT','SSS-TT',
                                                   'SS-TT')) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = 'rwEYSTI', names_sep = c (2,4),
+                          values_to = "rwEYSTI", names_sep = c (2,4),
                           names_prefix = siteMetaData$labelPrefix [i],
-                          names_to = c ('tree','core'))
-  } else if (siteMetaData$labelFormat [i] %in% c ('SSS-TT-I')) {
+                          names_to = c ("tree","core"))
+  } else if (siteMetaData$labelFormat [i] %in% c ("SSS-TT-I")) {
     temp <- pivot_longer (tmp, cols = 2:(dim (tmp)[2]), 
-                          values_to = 'rwEYSTI', names_sep = '-',
+                          values_to = "rwEYSTI", names_sep = "-",
                           names_prefix = siteMetaData$labelPrefix [i],
-                          names_to = c ('tree','core')) %>% 
+                          names_to = c ("tree","core")) %>% 
       mutate (rwEYSTI = as.numeric (rwEYSTI) / 1000) # TR - Need to double check that precision of the file
-    # TR - Need to check that the types are correct
+  } else if (siteMetaData$labelFormat [i] %in% c ("XTTT","XTTTT")) { # Loic's format
+    temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
+                          values_to = "rwEYSTI",
+                          names_prefix = siteMetaData$labelPrefix [i],
+                          names_to = "tree")
   }
   # delete row without ring width
   temp <- temp %>% filter (!is.na (rwEYSTI))
   
-  # add incrementCoreID for SF collection
-  if (siteMetaData$source [i] == 'SF') temp$core <- '1'
+  # add incrementCoreID for SF and LD collections, which only had one core per tree
+  if (siteMetaData$source [i] %in% c ("SF","LD")) temp$core <- "1"
   
   # add site name before adding it to the rwYSTI tibble
   temp <- temp %>% dplyr::mutate (site = siteMetaData$site [i], 
