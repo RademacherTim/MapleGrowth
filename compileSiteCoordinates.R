@@ -5,28 +5,24 @@
 #     - Neil Pederson                  (NP)       - TRUE
 #     - Justin Timothy Maxwell         (JTM)      - TRUE
 #     - Benoit Gendreau-Berthiaume     (BG)       - TRUE
-#     - Scott Warner                   (SW)       - FALSE
+#     - Scott Warner                   (SW)       - TRUE
 #     - David A. Orwig                 (DAO)      - TRUE
 #     - Tim Rademacher                 (TR)       - FALSE
 #     - Serge Payette                  (SP)       - TRUE
 #     - Martin Girardin                (MG)       - FALSE
-#     - Brett Huggett                  (BH)       - FALSE
 #     - Loic D'Orangeville             (LD)       - TRUE
 #     - Chistina Stinson               (CS)       - FALSE
 #     - Shawn Fraver                   (SF)       - TRUE
+#     - Justin Hart                    (JH)       - TRUE
 #-------------------------------------------------------------------------------
 
 # load dependencies
 #-------------------------------------------------------------------------------
 if (!existsFunction ("%>%")) library ("tidyverse")
 if (!existsFunction ("ggplot")) library ("ggplot2")
-#library ("ggmap")
-if (!existsFunction ("map_data")) library ("mapdata") # needed for Canadian borders
+if (!exists ("worldHiresMapEnv")) library ("mapdata") # needed for Canadian borders
 if (!existsFunction ("st_read")) library ("sf")
-#library ("rnaturalearth")
-#library ("rnaturalearthdata")
 if (!existsFunction ("readxl")) library ("readxl")
-library ("tiff")
 
 # get coordinates from all chronologies, but only colour the ones that are 
 # already added
@@ -61,16 +57,16 @@ nSamples <- siteMetaData %>% select (nTrees, nCores) %>%
 #     - HF microcores
 # get shapefile for red and sugar maple distributions from US Forest service
 #-------------------------------------------------------------------------------
-disACRU <- sf::st_read  ('../data/distribution/little1991/ACRU/litt316av.shp',
+disACRU <- sf::st_read  ("../data/distribution/little1991/ACRU/litt316av.shp",
                          stringsAsFactors = FALSE, quiet = TRUE)
-disACSH <- sf::st_read  ('../data/distribution/little1991/ACSH/litt318av.shp',
+disACSH <- sf::st_read  ("../data/distribution/little1991/ACSH/litt318av.shp",
                          stringsAsFactors = FALSE, quiet = TRUE)
 
 # set the coordinate system to Albers equal area projection with US Forest 
 # Service parameters from https://www.fs.fed.us/nrs/atlas/littlefia/albers_prj.txt
 #-------------------------------------------------------------------------------
 USFS_CRS <- 
-  '+proj=aea +lat_1=38.0 +lat_2=42.0 +lat_0=40.0 +lon_0=-82.0 +x_0=0 +y_0=0'
+  "+proj=aea +lat_1=38.0 +lat_2=42.0 +lat_0=40.0 +lon_0=-82.0 +x_0=0 +y_0=0"
 sf::st_crs (disACRU) <- USFS_CRS
 sf::st_crs (disACSH) <- USFS_CRS
 
@@ -83,11 +79,6 @@ disACSH_ll <- disACSH %>%
   sf::st_transform (crs = "+proj=longlat +ellps=WGS84 +datum=WGS84")
   #st_transform (crs = '+proj=lcc +lon_0=-90 +lat_1=33 +lat_2=45')
 
-# Load map biomass map from Beaudoin et al. (2014)
-#-------------------------------------------------------------------------------
-#disACRU_be <- readTIFF ('../data/distribution/beaudoin2014/Beaudoin_etal_2014_Acer/NFI_MODIS250m_kNN_Species_Acer_Rub_v0.tif')
-#disACRU_be [which (disACRU_be < -1e6)] <- NA
-  
 # get map data for USA and Canada
 #-------------------------------------------------------------------------------
 usa <- map_data ("usa")

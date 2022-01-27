@@ -18,10 +18,10 @@ siteMetaData <- readxl::read_excel (
                  "logical","text","text","text"),
   path = "../data/growth/chronologyData/siteMetaData.xlsx") %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ("ITRDB","NP","JTM","BG","SP", "SF","LD")) %>% # TR - Not including 'SW' as the data is still incomplete (ring widths missing)
+  filter (source %in% c ("ITRDB","NP","JTM","BG","SP", "SF","LD","SW")) %>% # TR - Add JH eventually  
   mutate (lon = as.numeric (lon),
           lat = as.numeric (lat))
-# NB: Still waiting for MG and SW chronologies.
+# NB: Still waiting for MG chronologies.
 
 # loop over files and load each of them into a tibble
 #-------------------------------------------------------------------------------
@@ -69,29 +69,30 @@ for (i in 1:dim (siteMetaData) [1]) {
   
   
   # pivot to longer format and add tree and core specifiers depending on format
-  if (siteMetaData$labelFormat [i] == 'TT-I') {
+  if (siteMetaData$labelFormat [i] == "TT-I") {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = 'rwEYSTI', names_sep = '-', 
-                          names_to = c ('tree','core'))
-  } else if (siteMetaData$labelFormat [i] %in% c ('SSSTTI','SSSSTTI','SSPPTTI',
-                                                  'SSSPTTI','SSSPPTTI','SSSSSTTI')) {
+                          values_to = "rwEYSTI", names_sep = "-", 
+                          names_to = c ("tree","core"))
+  } else if (siteMetaData$labelFormat [i] %in% c ("SSSTTI","SSSSTTI","SSPPTTI",
+                                                  "SSSPTTI","SSSPPTTI","SSSSSTTI",
+                                                  "SSSXXTTI")) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = 'rwEYSTI', names_sep = c (2,3),
+                          values_to = "rwEYSTI", names_sep = c (2,3),
                           names_prefix = siteMetaData$labelPrefix [i],
-                          names_to = c ('tree','core'))
+                          names_to = c ("tree","core"))
     if (siteMetaData$site [i] == 97) {
-      temp$core [temp$tree == '18'] <- 'N2'
-      temp$tree [temp$tree == '18'] <- '08'
+      temp$core [temp$tree == "18"] <- "N2"
+      temp$tree [temp$tree == "18"] <- "08"
     }
-  } else if (siteMetaData$labelFormat [i] %in% c ('SSPTTTI','TTTI','SSPTTI',
-                                                  'SSSTT')) {
+  } else if (siteMetaData$labelFormat [i] %in% c ("SSPTTTI","TTTI","SSPTTI",
+                                                  "SSSTT")) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = 'rwEYSTI', names_sep = c (3,4),
+                          values_to = "rwEYSTI", names_sep = c (3,4),
                           names_prefix = siteMetaData$labelPrefix [i],
-                          names_to = c ('tree','core'))
-    if (siteMetaData$site [i] %in% c (23:26)) temp$core <- '1'
-  } else if (siteMetaData$labelFormat [i] %in% c ('SSSSTTII','SSSS-TT','SSS-TT',
-                                                  'SS-TT')) {
+                          names_to = c ("tree","core"))
+    if (siteMetaData$site [i] %in% c (23:26)) temp$core <- "1"
+  } else if (siteMetaData$labelFormat [i] %in% c ("SSSSTTII","SSSS-TT","SSS-TT",
+                                                  "SS-TT")) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
                           values_to = "rwEYSTI", names_sep = c (2,4),
                           names_prefix = siteMetaData$labelPrefix [i],
@@ -102,7 +103,7 @@ for (i in 1:dim (siteMetaData) [1]) {
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ("tree","core")) %>% 
       mutate (rwEYSTI = as.numeric (rwEYSTI) / 1000) # TR - Need to double check that precision of the file
-  } else if (siteMetaData$labelFormat [i] %in% c ("XTTT","XTTTT")) { # Loic's format
+  } else if (siteMetaData$labelFormat [i] %in% c ("XTTT","XTTTT")) { # Loic"s format
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
                           values_to = "rwEYSTI",
                           names_prefix = siteMetaData$labelPrefix [i],
