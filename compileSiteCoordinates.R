@@ -14,6 +14,7 @@
 #     - Chistina Stinson               (CS)       - FALSE
 #     - Shawn Fraver                   (SF)       - TRUE
 #     - Justin Hart                    (JH)       - TRUE
+#     - Dan Bishop                     (DB)       - FALSE
 #-------------------------------------------------------------------------------
 
 # load dependencies
@@ -34,7 +35,7 @@ siteMetaData <- readxl::read_excel (col_names = TRUE,
   path = "../data/growth/chronologyData/siteMetaData.xlsx")
 siteMetaData <- siteMetaData %>% 
   mutate (colour = ifelse (species == "ACRU", "#901c3bcc","#f3bd48cc"),
-          colour = ifelse (source %in% c ("SW", "TR", "MG", "BH", "CS"), 
+          colour = ifelse (source %in% c ("TR", "MG", "BH", "CS"), 
                            "#eeeeeecc", colour),
           lon = as.numeric (lon),
           lat = as.numeric (lat))
