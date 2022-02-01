@@ -18,14 +18,14 @@ siteMetaData <- readxl::read_excel (
                  "logical","text","text","text"),
   path = "../data/growth/chronologyData/siteMetaData.xlsx") %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ("ITRDB","NP","JTM","BG","SP", "SF","LD","SW","DB")) %>% # TR - Add JH eventually
+  filter (source %in% c ("ITRDB","NP","JTM","BG","SP", "SF","LD","SW","DB","JH")) %>%
   mutate (lon = as.numeric (lon),
           lat = as.numeric (lat))
 # NB: Still waiting for MG chronologies.
 
 # loop over files and load each of them into a tibble
 #-------------------------------------------------------------------------------
-for (i in 191:208) {# 1:dim (siteMetaData) [1]) {
+for (i in 1:dim (siteMetaData) [1]) {
   
   # use source to figure out file path
   #-------------------------------------------------------------------------------
@@ -47,20 +47,33 @@ for (i in 191:208) {# 1:dim (siteMetaData) [1]) {
     fPath <- '../data/growth/chronologyData/LoicDOrangevilleCollection/'
   } else if (siteMetaData$source [i] == 'DB') {
     fPath <- '../data/growth/chronologyData/DanBishopCollection/'
+  } else if (siteMetaData$source [i] == 'JH') {
+    fPath <- '../data/growth/chronologyData/JustinHartCollection/'
   }
   filename <- paste0 (fPath, siteMetaData$file [i])
   #print (filename)
   
   # read the rwl file
-  if (siteMetaData$source [i] == 'SP') {
+  if (siteMetaData$source [i] == "SP" | (siteMetaData$source [i] == "JH" & 
+                                         substr (filename, nchar (filename)-2, 
+                                                 nchar (filename)) == "xls")) {
     tmp <- suppressMessages (
       readxl::read_excel (col_names = TRUE, 
-                          path = fPath, # In this case this is the file name
-                          sheet = siteMetaData$file [i]) [-c (1:3), ])
-    names (tmp) [1] <- 'year'
-  } else if (siteMetaData$source [i] != 'SP') {
+                          path = ifelse (siteMetaData$source [i] == "SP", 
+                                         fPath, filename), # In this case this is the file name
+                          sheet = ifelse (siteMetaData$source [i] == "SP",
+                                          siteMetaData$file [i], "rwl"),
+                          na = ifelse (siteMetaData$source [i] == "SP",
+                                       "", "NA"))) 
+    if (siteMetaData$source [i] == "SP") {
+      tmp <- tmp [-c (1:3), ]
+      names (tmp) [1] <- "year"
+    } else if (siteMetaData$source [i] == "JH") {
+      tmp <- tmp %>% relocate (year, .after = dim (tmp) [2])
+    }
+  } else if (siteMetaData$source [i] != "SP") {
     tmp <- suppressMessages (
-      dplR::read.rwl (fname = filename, format = 'tucson', 
+      dplR::read.rwl (fname = filename, format = "tucson", 
                       header = ifelse (is.na (siteMetaData$header [i]), 
                                        TRUE, 
                                        siteMetaData$header [i])))
@@ -68,9 +81,8 @@ for (i in 191:208) {# 1:dim (siteMetaData) [1]) {
     tmp$year <- rownames (tmp)
   }
   
-  
-  
   # pivot to longer format and add tree and core specifiers depending on format
+  #--------------------------------------------------------------------------------------
   if (siteMetaData$labelFormat [i] == "TT-I") {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
                           values_to = "rwEYSTI", names_sep = "-", 
@@ -111,6 +123,11 @@ for (i in 191:208) {# 1:dim (siteMetaData) [1]) {
                           values_to = "rwEYSTI",
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = "tree")
+  } else if (siteMetaData$labelFormat [i] %in% c ("SSSTTTTI")) {
+    temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
+                          values_to = "rwEYSTI", names_sep = c (4,5),
+                          names_prefix = siteMetaData$labelPrefix [i],
+                          names_to = c ("tree","core"))
   }
   # delete row without ring width
   temp <- temp %>% filter (!is.na (rwEYSTI))
