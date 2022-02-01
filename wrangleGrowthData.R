@@ -18,14 +18,14 @@ siteMetaData <- readxl::read_excel (
                  "logical","text","text","text"),
   path = "../data/growth/chronologyData/siteMetaData.xlsx") %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ("ITRDB","NP","JTM","BG","SP", "SF","LD","SW")) %>% # TR - Add JH eventually  
+  filter (source %in% c ("ITRDB","NP","JTM","BG","SP", "SF","LD","SW","DB")) %>% # TR - Add JH eventually
   mutate (lon = as.numeric (lon),
           lat = as.numeric (lat))
 # NB: Still waiting for MG chronologies.
 
 # loop over files and load each of them into a tibble
 #-------------------------------------------------------------------------------
-for (i in 1:dim (siteMetaData) [1]) {
+for (i in 191:208) {# 1:dim (siteMetaData) [1]) {
   
   # use source to figure out file path
   #-------------------------------------------------------------------------------
@@ -45,6 +45,8 @@ for (i in 1:dim (siteMetaData) [1]) {
     fPath <- '../data/growth/chronologyData/ShawnFraverCollection/'
   } else if (siteMetaData$source [i] == 'LD') {
     fPath <- '../data/growth/chronologyData/LoicDOrangevilleCollection/'
+  } else if (siteMetaData$source [i] == 'DB') {
+    fPath <- '../data/growth/chronologyData/DanBishopCollection/'
   }
   filename <- paste0 (fPath, siteMetaData$file [i])
   #print (filename)
@@ -73,8 +75,9 @@ for (i in 1:dim (siteMetaData) [1]) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
                           values_to = "rwEYSTI", names_sep = "-", 
                           names_to = c ("tree","core"))
-  } else if (siteMetaData$labelFormat [i] %in% c ("SSSTTI","SSSSTTI","SSPPTTI",
-                                                  "SSSPTTI","SSSPPTTI","SSSSSTTI",
+  } else if (siteMetaData$labelFormat [i] %in% c ("SSTTI","SSSTTI","SSSSTTI",
+                                                  "SSPPTTI","SSSPTTI",
+                                                  "SSSPPTTI","SSSSSTTI",
                                                   "SSSXXTTI")) {
     temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
                           values_to = "rwEYSTI", names_sep = c (2,3),

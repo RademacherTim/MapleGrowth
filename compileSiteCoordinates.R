@@ -14,7 +14,7 @@
 #     - Chistina Stinson               (CS)       - FALSE
 #     - Shawn Fraver                   (SF)       - TRUE
 #     - Justin Hart                    (JH)       - TRUE
-#     - Dan Bishop                     (DB)       - FALSE
+#     - Dan Bishop                     (DB)       - TRUE
 #-------------------------------------------------------------------------------
 
 # load dependencies
