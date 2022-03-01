@@ -11,23 +11,14 @@ if (!exists ('rwEYSTI')) source ('wrangleGrowthData.R') # to load ring width dat
 if (!existsFunction ('thornthwaite')) library ('SPEI') # to calculate the potential evapotranspiration
 if (!existsFunction ('pdsi')) library ('scPDSI') # to calculate the scPDSI
 
-# initialise spatial resolution for climate data
-#-------------------------------------------------------------------------------
-res <- 0.25
-
 # directory name with climate data
 #-------------------------------------------------------------------------------
-dirString <- '/Volumes/Untitled/TREE LAB 001/data/climate/princeton/'
+#dirString <- '../data/'
 
 # initial possible climates for climate data 
 #-------------------------------------------------------------------------------
 dates <- seq (from = as_date ('1948-01-01'), 
               to   = as_date ('2016-12-31'), by = 1)
-
-# add elevation of climate data to siteMetaData to compare the elevation of the 
-# actual stands versus the elevation to which weather is calibrated
-#-------------------------------------------------------------------------------
-#siteMetaData <- siteMetaData %>% mutate (eleClim = NA)
 
 # add tas column for mean summer temperature of the growing site
 #-------------------------------------------------------------------------------

@@ -195,7 +195,7 @@ tempData <- tempData %>%
 # delete all data preceding 1948 or after 2016, as there is no climate data for 
 # these years
 #-------------------------------------------------------------------------------
-rwEYSTI <- tempData %>% filter (year >= 1948 & year <= 2016)
+rwEYSTI <- tempData %>% filter (year >= 1900 & year <= 2020)
 
 # make sure year  and site are a integers
 #-------------------------------------------------------------------------------
