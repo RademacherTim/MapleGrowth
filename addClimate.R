@@ -17,7 +17,7 @@ res <- 0.25
 
 # directory name with climate data
 #-------------------------------------------------------------------------------
-dirString <- '/Volumes/TREE LAB001/data/climate/princeton/'
+dirString <- '/Volumes/Untitled/TREE LAB 001/data/climate/princeton/'
 
 # initial possible climates for climate data 
 #-------------------------------------------------------------------------------

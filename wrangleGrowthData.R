@@ -212,19 +212,22 @@ rwEYSTI <- rwEYSTI %>% select (-cardinalDir, -core, -tree)
 rwEYSTI <- rwEYSTI %>% 
   relocate (rwEYSTI, species, year, site, treeID, incrementCoreID, lat, lon)
 
+
+rwEYSTI <- rwEYSTI [-which (rwEYSTI$rwEYSTI < 0), ]
+
 # make histogram of ring widths
 #-------------------------------------------------------------------------------
 PLOT <- FALSE; if (PLOT) {
   png (file = '../fig/ringWidthsHist.png', width = 700, height = 400)
   par (mar = c (5, 5, 1, 5), mfrow = c (1, 1)) 
   hist (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACSA'], 
-        main = '', xlab = 'Ring width (mm)', las = 1, axes = FALSE,
-        ylim = c (0, 15000),
+        main = '', xlab = 'Ring width (mm)', ylab = "", las = 1, axes = FALSE,
+        ylim = c (0, 35000),
         col = '#f3bd4833', breaks = seq (0, 18, by = 0.3))
   hist (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACRU'], add = TRUE, axes = FALSE,
-        ylim = c (0, 15000), col = '#901c3b33', breaks = seq (0, 18, by = 0.3))
+        ylim = c (0, 35000), col = '#901c3b33', breaks = seq (0, 18, by = 0.3))
   axis (side = 1, seq (0, 18, 5))
-  axis (side = 2, seq (0, 15000, 5000), las = 1)
+  axis (side = 2, seq (0, 35000, 10000), las = 1)
   par (new = TRUE)
   plot (density (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACSA']), 
         col = '#f3bd4866', lwd = 3, main = '', xlab = '', 
