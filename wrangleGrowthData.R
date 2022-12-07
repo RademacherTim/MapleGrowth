@@ -14,11 +14,12 @@ if (!existsFunction ("read.rwl")) library ("dplR") # to read chronology files
 siteMetaData <- readxl::read_excel (
   col_names = TRUE, 
   col_types = c ("numeric","text","text","text","text","text","text",
-                 "numeric","numeric","numeric","numeric","numeric","text",
-                 "logical","text","text","text"),
-  path = "../data/growth/chronologyData/siteMetaData.xlsx") %>% 
+                 "text","numeric","numeric","numeric","numeric","numeric",
+                 "text","logical","text","text","text"),
+  path = "../data/growth/chronologyData/siteMetaData.xlsx",
+  na = "NA") %>% 
   filter (!is.na (file)) %>% 
-  filter (source %in% c ("ITRDB","NP","JTM","BG","SP", "SF","LD","SW","DB","JH")) %>%
+  filter (source %in% c ("ITRDB_clean","NP","JTM","BG","SP", "SF","LD","SW","DB","JH","ITRDB")) %>%
   mutate (lon = as.numeric (lon),
           lat = as.numeric (lat))
 # NB: Still waiting for MG chronologies.
@@ -29,7 +30,7 @@ for (i in 1:dim (siteMetaData) [1]) {
   
   # use source to figure out file path
   #-------------------------------------------------------------------------------
-  if (siteMetaData$source [i] == 'ITRDB') {
+  if (siteMetaData$source [i] == 'ITRDB_clean') {
     fPath <- '../data/growth/chronologyData/ITRDB_cleaned_Zhao2019/Cleaned datasets/itrdb-v713-cleaned-rwl/usa/'
   } else if (siteMetaData$source [i] == 'NP') {
     fPath <- '../data/growth/chronologyData/NeilPedersonCollection/'
@@ -49,6 +50,8 @@ for (i in 1:dim (siteMetaData) [1]) {
     fPath <- '../data/growth/chronologyData/DanBishopCollection/'
   } else if (siteMetaData$source [i] == 'JH') {
     fPath <- '../data/growth/chronologyData/JustinHartCollection/'
+  } else if (siteMetaData$source [i] == 'ITRDB') {
+    fPath <- '../data/growth/chronologyData/ITRDB/'
   }
   filename <- paste0 (fPath, siteMetaData$file [i])
   #print (filename)
@@ -128,6 +131,11 @@ for (i in 1:dim (siteMetaData) [1]) {
                           values_to = "rwEYSTI", names_sep = c (4,5),
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ("tree","core"))
+  } else if (siteMetaData$labelFormat [i] %in% c ("TTSSSSI")) {
+    temp <- pivot_longer(tmp, cols = 1:(dim (tmp)[2]-1), 
+                         values_to = "rwEYSTI", names_sep = c (3,8),
+                         names_to = c ("tree","core")) %>%
+      mutate(core = substr(core, 5, 5))
   }
   # delete row without ring width
   temp <- temp %>% filter (!is.na (rwEYSTI))
@@ -151,7 +159,7 @@ for (i in 1:dim (siteMetaData) [1]) {
   }
 
   # print important metadata
-  VERBOSE <- FALSE
+  VERBOSE <- TRUE
   if (VERBOSE) {
     print (sprintf ('Site: %i', siteMetaData$site [i]))
     print (sprintf ('Start: %s', min (temp$year)))
@@ -247,7 +255,21 @@ rwEYST <- rwEYSTI %>% group_by (species, year, site, treeID, lat, lon) %>%
   summarise (rwEYST = mean (rwEYSTI, na.rm = TRUE), .groups = 'drop') %>% 
   relocate (rwEYST, species, year, site, treeID, lat, lon)
 
-# clean up
-#-------------------------------------------------------------------------------
+# mean radial growth -----------------------------------------------------------
+rwEYST %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+rwEYST %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+rwEYST %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+rwEYST %>% select(rwEYST) %>% count()
+# N.B.: There is negative growth somewhere. I need to figure out what is going on.
+
+# mean radial growth in Quebec -------------------------------------------------
+# included sites: BG - 62-131
+#                 SP - 132-158
+rwEYST %>% filter(site %in% 62:158) %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+rwEYST %>% filter(site %in% 62:158) %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+rwEYST %>% filter(site %in% 62:158) %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+rwEYST %>% filter(site %in% 62:158) %>% select(rwEYST) %>% count()
+
+# clean up ---------------------------------------------------------------------
 rm (i, fPath, filename, PLOT, VERBOSE)
 #===============================================================================
