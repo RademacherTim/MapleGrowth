@@ -1,37 +1,38 @@
 #===============================================================================
 # Script to read locations for maple (i.e., red maple and sugar maple) growth 
 # data such as chronologies:
-#     - ITRDB, from Zhao et al. (2019) (ITRDB)    - TRUE
-#     - Neil Pederson                  (NP)       - TRUE
-#     - Justin Timothy Maxwell         (JTM)      - TRUE
-#     - Benoit Gendreau-Berthiaume     (BG)       - TRUE
-#     - Scott Warner                   (SW)       - TRUE
-#     - David A. Orwig                 (DAO)      - TRUE
-#     - Tim Rademacher                 (TR)       - FALSE
-#     - Serge Payette                  (SP)       - TRUE
-#     - Martin Girardin                (MG)       - FALSE
-#     - Loic D'Orangeville             (LD)       - TRUE
-#     - Chistina Stinson               (CS)       - FALSE
-#     - Shawn Fraver                   (SF)       - TRUE
-#     - Justin Hart                    (JH)       - TRUE
-#     - Dan Bishop                     (DB)       - TRUE
+#     - ITRDB, from Zhao et al. (2019)      (ITRDB)    - TRUE
+#     - Neil Pederson                       (NP)       - TRUE
+#     - Justin Timothy Maxwell              (JTM)      - TRUE
+#     - Benoit Gendreau-Berthiaume          (BG)       - TRUE
+#     - Scott Warner                        (SW)       - TRUE
+#     - David A. Orwig                      (DAO)      - TRUE
+#     - Tim Rademacher                      (TR)       - FALSE
+#     - Serge Payette                       (SP)       - TRUE
+#     - Martin Girardin                     (MG)       - FALSE
+#     - Loic D'Orangeville                  (LD)       - TRUE
+#     - Chistina Stinson                    (CS)       - FALSE
+#     - Shawn Fraver                        (SF)       - TRUE
+#     - Justin Hart                         (JH)       - TRUE
+#     - Dan Bishop                          (DB)       - TRUE
+#     - Ministère de Faune, Forêt et Parcs  (MFFP)     - TRUE
 #-------------------------------------------------------------------------------
 
 # load dependencies
 #-------------------------------------------------------------------------------
-if (!existsFunction ("%>%")) library ("tidyverse")
-if (!existsFunction ("ggplot")) library ("ggplot2")
-if (!exists ("worldHiresMapEnv")) library ("mapdata") # needed for Canadian borders
-if (!existsFunction ("st_read")) library ("sf")
-if (!existsFunction ("readxl")) library ("readxl")
+if(!existsFunction ("%>%"))      library ("tidyverse")
+if(!existsFunction ("ggplot"))   library ("ggplot2")
+if(!exists ("worldHiresMapEnv")) library ("mapdata") # needed for Canadian borders
+if(!existsFunction ("st_read"))  library ("sf")
+if(!existsFunction ("readxl"))   library ("readxl")
 
 # get coordinates from all chronologies, but only colour the ones that are 
 # already added
 #-------------------------------------------------------------------------------
 siteMetaData <- readxl::read_excel (col_names = TRUE, 
-  col_types = c ("numeric","text","text","text","text","text","text",
+  col_types = c ("numeric","text","text","text","text","text","text","text",
                  "numeric","numeric","numeric","numeric","numeric","text",
-                 "logical","text","text","text"),
+                 "logical","text","text","logical"),
   path = "../data/growth/chronologyData/siteMetaData.xlsx")
 siteMetaData <- siteMetaData %>% 
   mutate (colour = ifelse (species == "ACRU", "#901c3bcc","#f3bd48cc"),
