@@ -9,6 +9,9 @@ if (!existsFunction("%>%"))      library("tidyverse") # to process data
 if (!existsFunction("readxl"))   library("readxl") # to read metadata
 if (!existsFunction("read.rwl")) library("dplR") # to read chronology files
 
+# change warnings to be errors to make sure everything is read properly --------
+options(warn = 2)
+
 # get metadata for all chronologies with file
 #-------------------------------------------------------------------------------
 siteMetaData <- readxl::read_excel(
@@ -98,11 +101,12 @@ for (i in 1:dim (siteMetaData)[1]) {
       select(-c(p, m, h)) %>% 
       mutate(lat = siteMetaData$lat[i],
              lon = siteMetaData$lon[i]) %>% 
-      relocate(year, site, lat, lon, species, tree, core, rwEYSTI)
+      relocate(year, site, lat, lon, species, tree, core, rwEYSTI) %>%
+      mutate(rwEYSTI = rwEYSTI / 100)
   } else if (siteMetaData$source[i] != 'SP') {
     tmp <- suppressMessages(
       dplR::read.rwl(fname = filename, format = "tucson", 
-                     header = ifelse(is.na (siteMetaData$header[i]), 
+                     header = ifelse(is.na(siteMetaData$header[i]), 
                                      TRUE, 
                                      siteMetaData$header[i])))
     # add year as a seperate row
@@ -121,10 +125,10 @@ for (i in 1:dim (siteMetaData)[1]) {
                                                   "SSPPTTI","SSSPTTI",
                                                   "SSSPPTTI","SSSSSTTI",
                                                   "SSSXXTTI")) {
-    temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = "rwEYSTI", names_sep = c (2,3),
-                          names_prefix = siteMetaData$labelPrefix [i],
-                          names_to = c ("tree","core"))
+    temp <- pivot_longer(tmp, cols = 1:(dim(tmp)[2]-1), 
+                         values_to = "rwEYSTI", names_sep = c(2,3),
+                         names_prefix = siteMetaData$labelPrefix[i],
+                         names_to = c("tree","core"))
     if (siteMetaData$site [i] == 97) {
       temp$core [temp$tree == "18"] <- "N2"
       temp$tree [temp$tree == "18"] <- "08"
@@ -143,21 +147,21 @@ for (i in 1:dim (siteMetaData)[1]) {
                           names_prefix = siteMetaData$labelPrefix [i],
                           names_to = c ("tree","core"))
   } else if (siteMetaData$labelFormat [i] %in% c ("SSS-TT-I")) {
-    temp <- pivot_longer (tmp, cols = 2:(dim (tmp)[2]), 
-                          values_to = "rwEYSTI", names_sep = "-",
-                          names_prefix = siteMetaData$labelPrefix [i],
-                          names_to = c ("tree","core")) %>% 
-      mutate (rwEYSTI = as.numeric (rwEYSTI) / 1000) # TR - Need to double check that precision of the file
+    temp <- pivot_longer(tmp, cols = 2:(dim (tmp)[2]), 
+                         values_to = "rwEYSTI", names_sep = "-",
+                         names_prefix = siteMetaData$labelPrefix[i],
+                         names_to = c("tree","core")) %>% 
+      mutate(rwEYSTI = as.numeric(rwEYSTI) / 1000)
   } else if (siteMetaData$labelFormat [i] %in% c ("XTTT","XTTTT")) { # Loic"s format
-    temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = "rwEYSTI",
-                          names_prefix = siteMetaData$labelPrefix [i],
-                          names_to = "tree")
+    temp <- pivot_longer(tmp, cols = 1:(dim(tmp)[2]-1), 
+                         values_to = "rwEYSTI",
+                         names_prefix = siteMetaData$labelPrefix[i],
+                         names_to = "tree")
   } else if (siteMetaData$labelFormat [i] %in% c ("SSSTTTTI")) {
-    temp <- pivot_longer (tmp, cols = 1:(dim (tmp)[2]-1), 
-                          values_to = "rwEYSTI", names_sep = c (4,5),
-                          names_prefix = siteMetaData$labelPrefix [i],
-                          names_to = c ("tree","core"))
+    temp <- pivot_longer(tmp, cols = 1:(dim (tmp)[2]-1), 
+                         values_to = "rwEYSTI", names_sep = c(4,5),
+                         names_prefix = siteMetaData$labelPrefix[i],
+                         names_to = c("tree","core"))
   } else if (siteMetaData$labelFormat [i] %in% c ("TTSSSSI")) {
     temp <- pivot_longer(tmp, cols = 1:(dim (tmp)[2]-1), 
                          values_to = "rwEYSTI", names_sep = c (3,8),
@@ -200,10 +204,12 @@ for (i in 1:dim (siteMetaData)[1]) {
     print ('')
   }
   
-  if (i == 221) break
   # delete temporary variables 
   rm (tmp, temp)
 }
+
+# change warnings back to be just that -----------------------------------------
+options(warn = 1)
 
 # add unique tree and core IDs for simulation to each row
 #-------------------------------------------------------------------------------
@@ -261,12 +267,12 @@ PLOT <- FALSE; if (PLOT) {
   par (mar = c (5, 5, 1, 5), mfrow = c (1, 1)) 
   hist (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACSA'], 
         main = '', xlab = 'Ring width (mm)', ylab = "", las = 1, axes = FALSE,
-        ylim = c (0, 35000),
-        col = '#f3bd4833', breaks = seq (0, 18, by = 0.3))
+        ylim = c (0, 70000),
+        col = '#f3bd4833', breaks = seq (0, 21, by = 0.3))
   hist (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACRU'], add = TRUE, axes = FALSE,
-        ylim = c (0, 35000), col = '#901c3b33', breaks = seq (0, 18, by = 0.3))
-  axis (side = 1, seq (0, 18, 5))
-  axis (side = 2, seq (0, 35000, 10000), las = 1)
+        ylim = c (0, 70000), col = '#901c3b33', breaks = seq (0, 21, by = 0.3))
+  axis (side = 1, seq (0, 21, 5))
+  axis (side = 2, seq (0, 70000, 10000), las = 1)
   par (new = TRUE)
   plot (density (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACSA']), 
         col = '#f3bd4866', lwd = 3, main = '', xlab = '', 
