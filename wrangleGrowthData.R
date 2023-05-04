@@ -236,6 +236,10 @@ tempData <- tempData %>%
                                         ifelse (core == 'South', 'South', 
                                                 ifelse (core == 'West', 'West', NA)))))
 
+# estimate size and age of each tree at each point in time ---------------------
+tempData %>% group_by(site, treeID) %>% mutate(rw_cum = cumsum(rwEYST))
+# TR - I got stuck here and need to work on this. 
+
 # delete all data preceding 1948 or after 2020, as there is no climate data for 
 # these years
 #-------------------------------------------------------------------------------
