@@ -236,7 +236,7 @@ tempData <- tempData %>%
                                         ifelse (core == 'South', 'South', 
                                                 ifelse (core == 'West', 'West', NA)))))
 
-# delete all data preceding 1948 or after 2016, as there is no climate data for 
+# delete all data preceding 1948 or after 2020, as there is no climate data for 
 # these years
 #-------------------------------------------------------------------------------
 rwEYSTI <- tempData %>% filter (year >= 1900 & year <= 2020)
@@ -292,20 +292,65 @@ rwEYST <- rwEYSTI %>% group_by(species, year, site, treeID, lat, lon) %>%
   summarise(rwEYST = mean(rwEYSTI, na.rm = TRUE), .groups = 'drop') %>% 
   relocate(rwEYST, species, year, site, treeID, lat, lon)
 
-# mean radial growth -----------------------------------------------------------
-rwEYST %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
-rwEYST %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
-rwEYST %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
-rwEYST %>% select(rwEYST) %>% count()
+# maple growth statistics ------------------------------------------------------
+rwEYST %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE)  # mean
+rwEYST %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE)    # standard deviation
+rwEYST %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) # range
+rwEYST %>% select(rwEYST) %>% count()                             # number of rings (averaged per trees)
+rwEYSTI %>% select(rwEYSTI) %>% count()                           # number of rings
+rwEYSTI %>% filter(rwEYSTI == 0) %>% select (rwEYSTI) %>% count() # number of missing rings
+rwEYSTI %>% filter(rwEYSTI == 0) %>% select (rwEYSTI) %>% count() / # frequency of missing rings
+rwEYSTI %>% select(rwEYSTI) %>% count()                        
 # N.B.: There is negative growth somewhere. I need to figure out what is going on.
 
+# sugar maple 
+rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% count()
+rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% select (rwEYST) %>% count()
+rwEYSTI %>% filter (species == "ACSA") %>% select(rwEYSTI) %>% count()
+rwEYSTI %>% filter(rwEYSTI == 0, species == "ACSA") %>% select (rwEYSTI) %>% 
+  count() / rwEYSTI %>% filter(species == "ACSA") %>% select(rwEYSTI) %>% count()  
+
+# red maple 
+rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% count()
+rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% select (rwEYST) %>% count()
+rwEYSTI %>% filter (species == "ACRU") %>% select(rwEYSTI) %>% count()
+rwEYSTI %>% filter(rwEYSTI == 0, species == "ACRU") %>% select (rwEYSTI) %>% 
+  count() / rwEYSTI %>% filter(species == "ACRU") %>% select(rwEYSTI) %>% count() 
+
 # mean radial growth in Quebec -------------------------------------------------
-# included sites: BG - 62-131
-#                 SP - 132-158
-rwEYST %>% filter(site %in% 62:158) %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
-rwEYST %>% filter(site %in% 62:158) %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
-rwEYST %>% filter(site %in% 62:158) %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
-rwEYST %>% filter(site %in% 62:158) %>% select(rwEYST) %>% count()
+# included sites: BG   - 62-131
+#                 SP   - 132-158
+#                 MFFP - 248:267
+Quebec <- rwEYST %>% filter(site %in% c(62:158, 248:267))
+Quebec %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+Quebec %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+Quebec %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+Quebec %>% select(rwEYST) %>% count()
+rwEYSTI %>% filter(site %in% c(62:158, 248:267)) %>% select(rwEYSTI) %>% count()
+
+# Sugar maple ------------------------------------------------------------------
+Quebec %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACSA") %>% select(rwEYST) %>% count()
+rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% select(rwEYSTI) %>% count()
+rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% select(rwEYSTI) %>% filter (rwEYSTI == 0) %>% count() / 
+rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% select(rwEYSTI) %>% count()
+
+# Red maple --------------------------------------------------------------------
+Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% count()
+rwEYSTI %>% filter (species == "ACRU", site %in% c(62:158, 248:267)) %>% select(rwEYSTI) %>% count()
+rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACRU") %>% select(rwEYSTI) %>% filter (rwEYSTI == 0) %>% count() / 
+  rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACRU") %>% select(rwEYSTI) %>% count()
 
 # clean up ---------------------------------------------------------------------
 rm (i, fPath, filename, PLOT, VERBOSE)

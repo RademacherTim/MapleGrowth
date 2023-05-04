@@ -33,7 +33,7 @@ siteMetaData <- readxl::read_excel (col_names = TRUE,
   col_types = c ("numeric","text","text","text","text","text","text","text",
                  "numeric","numeric","numeric","numeric","numeric","text",
                  "logical","text","text","logical"),
-  path = "../data/growth/chronologyData/siteMetaData.xlsx")
+  path = '../data/growth/chronologyData/siteMetaData.xlsx', na = 'NA')
 siteMetaData <- siteMetaData %>% 
   mutate (colour = ifelse (species == "ACRU", "#901c3bcc","#f3bd48cc"),
           colour = ifelse (source %in% c ("TR", "MG", "BH", "CS"), 
