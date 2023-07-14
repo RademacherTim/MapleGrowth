@@ -104,8 +104,8 @@ NAmap <- ggplot () +
           subtitle = paste0 ('for growth of ', nSamples$nTrees,
                              ' maple trees from ',nSamples$nCores,' cores at ',
                              max (siteMetaData$site),' sites')) +
-  geom_point (data = siteMetaData, 
-              aes (x = lon, y = lat, fill = colour), 
+  geom_point(data = siteMetaData, 
+             aes (x = lon, y = lat, fill = colour), 
              fill = siteMetaData [['colour']], 
              color = "#444444", shape = 21, size = 2.5) + 
   coord_sf (xlim = c (-98, -50),  ylim = c (26, 55)) +

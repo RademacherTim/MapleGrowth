@@ -236,29 +236,35 @@ tempData <- tempData %>%
                                         ifelse (core == 'South', 'South', 
                                                 ifelse (core == 'West', 'West', NA)))))
 
-# estimate size and age of each tree at each point in time ---------------------
-tempData %>% group_by(site, treeID) %>% mutate(rw_cum = cumsum(rwEYST))
-# TR - I got stuck here and need to work on this. 
-
-# delete all data preceding 1948 or after 2020, as there is no climate data for 
-# these years
-#-------------------------------------------------------------------------------
-rwEYSTI <- tempData %>% filter (year >= 1900 & year <= 2020)
+# arrange in chronological order -----------------------------------------------
+tempData <- tempData %>% arrange(year)
 
 # make sure year  and site are a integers
 #-------------------------------------------------------------------------------
-rwEYSTI <- rwEYSTI %>% mutate (site = as.factor (site),
-                               year = as.factor (year))
+tempData <- tempData %>% mutate(year = as.integer (year))
+
+# add cumulative sums of size and age at each point in time --------------------
+tempData <- tempData %>% group_by(site, treeID, incrementCoreID) %>% 
+  mutate(rw_cum = cumsum(rwEYSTI), min_age = year-min(year)+1)
+
+# replace the mininum age for the older core with the younger ------------------
+tempData <- tempData %>% group_by(year, treeID) %>% 
+  mutate(min_age = max(min_age)) %>% ungroup()
+
+# add approximation of missed length to the increment core with less years -----
+#for (r in 1:dim(tempData)[1]){
+  
+}
 
 # deselect cardinal direction for now and only keep incrementCoreID and treeID
 #-------------------------------------------------------------------------------
-rwEYSTI <- rwEYSTI %>% select (-cardinalDir, -core, -tree)
+tempData <- tempData %>% select (-cardinalDir, -core, -tree)
 
 # reorder in terms of model subscripts (i.e., 'E' for species, 'Y' for year, 
 # 'S' for sites, 'T' for tree, and 'I' for increment core)
 #-------------------------------------------------------------------------------
-rwEYSTI <- rwEYSTI %>% 
-  relocate (rwEYSTI, species, year, site, treeID, incrementCoreID, lat, lon)
+rwEYSTI <- tempData %>% 
+  relocate (rwEYSTI, rw_cum, min_age, species, year, site, treeID, incrementCoreID, lat, lon)
 
 # TR - Where are the negative ones and why!!!
 rwEYSTI <- rwEYSTI [-which (rwEYSTI$rwEYSTI < 0), ]
@@ -268,38 +274,52 @@ rwEYSTI <- rwEYSTI [-which (rwEYSTI$rwEYSTI < 0), ]
 #-------------------------------------------------------------------------------
 PLOT <- FALSE; if (PLOT) {
   png (file = '../fig/ringWidthsHist.png', width = 700, height = 400)
-  par (mar = c (5, 5, 1, 5), mfrow = c (1, 1)) 
+  par (mar = c (5, 6, 1, 5), mfrow = c (1, 1)) 
   hist (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACSA'], 
-        main = '', xlab = 'Ring width (mm)', ylab = "", las = 1, axes = FALSE,
-        ylim = c (0, 70000),
+        main = '', xlab = 'Croissance radiale (mm)', ylab = "", las = 1, axes = FALSE,
+        ylim = c (0, 80000), border = F,
         col = '#f3bd4833', breaks = seq (0, 21, by = 0.3))
   hist (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACRU'], add = TRUE, axes = FALSE,
-        ylim = c (0, 70000), col = '#901c3b33', breaks = seq (0, 21, by = 0.3))
+        ylim = c (0, 80000), border = F, col = '#901c3b33', 
+        breaks = seq (0, 21, by = 0.3))
+  abline (v = max(rwEYSTI$rwEYSTI [rwEYSTI$species == "ACSA"]), 
+          col = '#f3bd48', lwd = 2, lty = 2)
+  #text(x = max(rwEYSTI$rwEYSTI [rwEYSTI$species == "ACSA"]),
+  #     y = , labels = "max")
+  abline (v = max(rwEYSTI$rwEYSTI [rwEYSTI$species == "ACRU"]), 
+          col = '#901c3b', lwd = 2, lty = 2)
   axis (side = 1, seq (0, 21, 5))
-  axis (side = 2, seq (0, 70000, 10000), las = 1)
+  axis (side = 2, seq (0, 80000, 10000), las = 1)
   par (new = TRUE)
   plot (density (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACSA']), 
-        col = '#f3bd4866', lwd = 3, main = '', xlab = '', 
+        col = '#f3bd48', lwd = 3, main = '', xlab = '', 
         ylab = '', axes = FALSE, ylim = c (0, 0.5))
   par (new = TRUE)
   plot (density (rwEYSTI$rwEYSTI [rwEYSTI$species == 'ACRU']), 
-        col = '#901c3b66', lwd = 3, main = '', xlab = '', 
+        col = '#901c3b', lwd = 3, main = '', xlab = '', 
         ylab = '', axes = FALSE, ylim = c (0, 0.5))
   axis (side = 4, seq (0, 0.5, 0.1), las = 1)
-  mtext (side = 4, line = 4, text = 'Density')
+  
+  mtext (side = 4, line = 4, text = 'Densité')
+  mtext (side = 2, line = 4, text = 'Fréquence')
   dev.off ()
 }
 
 # average by tree
 #-------------------------------------------------------------------------------
 rwEYST <- rwEYSTI %>% group_by(species, year, site, treeID, lat, lon) %>%
-  summarise(rwEYST = mean(rwEYSTI, na.rm = TRUE), .groups = 'drop') %>% 
-  relocate(rwEYST, species, year, site, treeID, lat, lon)
+  summarise(rwEYST = mean(rwEYSTI, na.rm = TRUE), 
+            age = max(min_age),
+            rw_cum = mean(rw_cum), # TR - this is not correct but better than nothing for the presentation on monday
+            .groups = 'drop') %>% 
+  relocate(rwEYST, rw_cum, age, species, year, site, treeID, lat, lon)
 
 # maple growth statistics ------------------------------------------------------
 rwEYST %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE)  # mean
 rwEYST %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE)    # standard deviation
 rwEYST %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) # range
+rwEYSTI %>% group_by(treeID) 
+rwEYSTI %>% group_by(incrementCoreID) 
 rwEYST %>% select(rwEYST) %>% count()                             # number of rings (averaged per trees)
 rwEYSTI %>% select(rwEYSTI) %>% count()                           # number of rings
 rwEYSTI %>% filter(rwEYSTI == 0) %>% select (rwEYSTI) %>% count() # number of missing rings
@@ -312,7 +332,6 @@ rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% mean(.
 rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
 rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
 rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% count()
-rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% select (rwEYST) %>% count()
 rwEYSTI %>% filter (species == "ACSA") %>% select(rwEYSTI) %>% count()
 rwEYSTI %>% filter(rwEYSTI == 0, species == "ACSA") %>% select (rwEYSTI) %>% 
   count() / rwEYSTI %>% filter(species == "ACSA") %>% select(rwEYSTI) %>% count()  
@@ -322,7 +341,6 @@ rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% mean(.
 rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
 rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
 rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% count()
-rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% select (rwEYST) %>% count()
 rwEYSTI %>% filter (species == "ACRU") %>% select(rwEYSTI) %>% count()
 rwEYSTI %>% filter(rwEYSTI == 0, species == "ACRU") %>% select (rwEYSTI) %>% 
   count() / rwEYSTI %>% filter(species == "ACRU") %>% select(rwEYSTI) %>% count() 
@@ -355,6 +373,10 @@ Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% count()
 rwEYSTI %>% filter (species == "ACRU", site %in% c(62:158, 248:267)) %>% select(rwEYSTI) %>% count()
 rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACRU") %>% select(rwEYSTI) %>% filter (rwEYSTI == 0) %>% count() / 
   rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACRU") %>% select(rwEYSTI) %>% count()
+
+# delete data before 1900 (no climate data avaiable)
+#-------------------------------------------------------------------------------
+rwEYST <- rwEYST %>% filter (year >= 1900)
 
 # clean up ---------------------------------------------------------------------
 rm (i, fPath, filename, PLOT, VERBOSE)
