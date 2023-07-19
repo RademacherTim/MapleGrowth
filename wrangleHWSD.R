@@ -8,7 +8,7 @@ library ('ncdf4')
 
 # get soil and topographic data from the Harmonized World Soil Database 
 #-------------------------------------------------------------------------------
-hwsd <- nc_open ("../data/soils/HWSD_1247/data/")
+hwsd <- ncdf4::nc_open ("../data/soils/HWSD_1247/data/S_C.nc4")
 
 # add projection information (i.e., Plate Carrée using WGS84 datum according to 
 # documentation) to HWSD

@@ -1,10 +1,9 @@
 #===============================================================================
 # Script to wrangle growth data from various formats (mainly Tucson format) 
-# into long format
+# into long format.
 #-------------------------------------------------------------------------------
 
-# load dependencies
-#-------------------------------------------------------------------------------
+# load dependencies ------------------------------------------------------------
 if (!existsFunction("%>%"))      library("tidyverse") # to process data
 if (!existsFunction("readxl"))   library("readxl") # to read metadata
 if (!existsFunction("read.rwl")) library("dplR") # to read chronology files
@@ -12,8 +11,7 @@ if (!existsFunction("read.rwl")) library("dplR") # to read chronology files
 # change warnings to be errors to make sure everything is read properly --------
 options(warn = 2)
 
-# get metadata for all chronologies with file
-#-------------------------------------------------------------------------------
+# get metadata for all chronologies with file ----------------------------------
 siteMetaData <- readxl::read_excel(
   col_names = TRUE, 
   col_types = c ("numeric","text","text","text","text","text","text",
@@ -22,17 +20,15 @@ siteMetaData <- readxl::read_excel(
   path = "../data/growth/chronologyData/siteMetaData.xlsx",
   na = "NA") %>% 
   filter(!is.na(file)) %>% 
-  filter(source %in% c("ITRDB_clean","NP","JTM","SW","BG","SP", "SF","LD","JH",
-                       "DB","ITRDB","MFFP")) %>%
+  filter(source %in% c("ITRDB_clean", "NP", "JTM", "SW", "BG", "SP", "SF", "LD", 
+                       "JH", "DB", "ITRDB", "MFFP")) %>%
   mutate(lon = as.numeric(lon), lat = as.numeric(lat))
 # NB: Still waiting for MG chronologies.
 
-# loop over files and load each of them into a tibble
-#-------------------------------------------------------------------------------
+# loop over files and load each of them into a tibble --------------------------
 for (i in 1:dim (siteMetaData)[1]) {
   
-  # use source to figure out file path
-  #-------------------------------------------------------------------------------
+  # use source to figure out file path -----------------------------------------
   if (siteMetaData$source[i] == 'ITRDB_clean') {
     fPath <- '../data/growth/chronologyData/ITRDB_cleaned_Zhao2019/Cleaned datasets/itrdb-v713-cleaned-rwl/usa/'
   } else if (siteMetaData$source[i] == 'NP') {
@@ -61,7 +57,7 @@ for (i in 1:dim (siteMetaData)[1]) {
   filename <- paste0(fPath, siteMetaData$file[i])
   #print (filename)
   
-  # read the rwl or other file with raw measurements
+  # read the rwl or other file with raw measurements ---------------------------
   if ((siteMetaData$source[i] == 'SP') | 
       (siteMetaData$source[i] == "JH" & 
        substr(filename, nchar(filename)-2, nchar(filename)) == "xls")) {
@@ -98,7 +94,7 @@ for (i in 1:dim (siteMetaData)[1]) {
         site == 1501 ~ 266, site == 1502 ~ 267)) %>%
       filter(site == i) %>%
       mutate(species = ifelse(species == 'ERS', 'ACSA', 'ACRU')) %>%
-      select(-c(p, m, h)) %>% 
+      dplyr::select(-c(p, m, h)) %>% 
       mutate(lat = siteMetaData$lat[i],
              lon = siteMetaData$lon[i]) %>% 
       relocate(year, site, lat, lon, species, tree, core, rwEYSTI) %>%
@@ -251,14 +247,15 @@ tempData <- tempData %>% group_by(site, treeID, incrementCoreID) %>%
 tempData <- tempData %>% group_by(year, treeID) %>% 
   mutate(min_age = max(min_age)) %>% ungroup()
 
+# TR - I need to add this calculation eventually
 # add approximation of missed length to the increment core with less years -----
 #for (r in 1:dim(tempData)[1]){
-  
-}
+#  
+#}
 
 # deselect cardinal direction for now and only keep incrementCoreID and treeID
 #-------------------------------------------------------------------------------
-tempData <- tempData %>% select (-cardinalDir, -core, -tree)
+tempData <- tempData %>% dplyr::select (-cardinalDir, -core, -tree)
 
 # reorder in terms of model subscripts (i.e., 'E' for species, 'Y' for year, 
 # 'S' for sites, 'T' for tree, and 'I' for increment core)
@@ -266,9 +263,11 @@ tempData <- tempData %>% select (-cardinalDir, -core, -tree)
 rwEYSTI <- tempData %>% 
   relocate (rwEYSTI, rw_cum, min_age, species, year, site, treeID, incrementCoreID, lat, lon)
 
-# TR - Where are the negative ones and why!!!
+# There is one value from Justin Hart sugar maple (ACSA PCT.xls) at -2,903 which 
+# does not make sense and which I remove here for now --------------------------
 rwEYSTI <- rwEYSTI [-which (rwEYSTI$rwEYSTI < 0), ]
 # TR - Also need to check the really large numbers (i.e., > 8mm)
+# Largest ring comes from Louis Duchesne plots with 21mm
 
 # make histogram of ring widths
 #-------------------------------------------------------------------------------
@@ -315,69 +314,70 @@ rwEYST <- rwEYSTI %>% group_by(species, year, site, treeID, lat, lon) %>%
   relocate(rwEYST, rw_cum, age, species, year, site, treeID, lat, lon)
 
 # maple growth statistics ------------------------------------------------------
-rwEYST %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE)  # mean
-rwEYST %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE)    # standard deviation
-rwEYST %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) # range
+rwEYST %>% dplyr::select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE)  # mean
+rwEYST %>% dplyr::select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE)    # standard deviation
+rwEYST %>% dplyr::select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) # range
 rwEYSTI %>% group_by(treeID) 
 rwEYSTI %>% group_by(incrementCoreID) 
-rwEYST %>% select(rwEYST) %>% count()                             # number of rings (averaged per trees)
-rwEYSTI %>% select(rwEYSTI) %>% count()                           # number of rings
-rwEYSTI %>% filter(rwEYSTI == 0) %>% select (rwEYSTI) %>% count() # number of missing rings
-rwEYSTI %>% filter(rwEYSTI == 0) %>% select (rwEYSTI) %>% count() / # frequency of missing rings
-rwEYSTI %>% select(rwEYSTI) %>% count()                        
-# N.B.: There is negative growth somewhere. I need to figure out what is going on.
+rwEYST %>% dplyr::select(rwEYST) %>% count()                             # number of rings (averaged per trees)
+rwEYSTI %>% dplyr::select(rwEYSTI) %>% count()                           # number of rings
+rwEYSTI %>% filter(rwEYSTI == 0) %>% dplyr::select (rwEYSTI) %>% count() # number of missing rings
+rwEYSTI %>% filter(rwEYSTI == 0) %>% dplyr::select (rwEYSTI) %>% count() / # frequency of missing rings
+rwEYSTI %>% dplyr::select(rwEYSTI) %>% count()                        
 
 # sugar maple 
-rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
-rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
-rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
-rwEYST %>% filter (species == "ACSA") %>% select(rwEYST) %>% count()
-rwEYSTI %>% filter (species == "ACSA") %>% select(rwEYSTI) %>% count()
-rwEYSTI %>% filter(rwEYSTI == 0, species == "ACSA") %>% select (rwEYSTI) %>% 
-  count() / rwEYSTI %>% filter(species == "ACSA") %>% select(rwEYSTI) %>% count()  
+rwEYST %>% filter (species == "ACSA") %>% dplyr::select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACSA") %>% dplyr::select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACSA") %>% dplyr::select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACSA") %>% dplyr::select(rwEYST) %>% count()
+rwEYSTI %>% filter (species == "ACSA") %>% dplyr::select(rwEYSTI) %>% count()
+rwEYSTI %>% filter(rwEYSTI == 0, species == "ACSA") %>% dplyr::select (rwEYSTI) %>% 
+  count() / rwEYSTI %>% filter(species == "ACSA") %>% dplyr::select(rwEYSTI) %>% count()  
 
 # red maple 
-rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
-rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
-rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
-rwEYST %>% filter (species == "ACRU") %>% select(rwEYST) %>% count()
-rwEYSTI %>% filter (species == "ACRU") %>% select(rwEYSTI) %>% count()
-rwEYSTI %>% filter(rwEYSTI == 0, species == "ACRU") %>% select (rwEYSTI) %>% 
-  count() / rwEYSTI %>% filter(species == "ACRU") %>% select(rwEYSTI) %>% count() 
+rwEYST %>% filter (species == "ACRU") %>% dplyr::select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACRU") %>% dplyr::select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACRU") %>% dplyr::select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+rwEYST %>% filter (species == "ACRU") %>% dplyr::select(rwEYST) %>% count()
+rwEYSTI %>% filter (species == "ACRU") %>% dplyr::select(rwEYSTI) %>% count()
+rwEYSTI %>% filter(rwEYSTI == 0, species == "ACRU") %>% dplyr::select (rwEYSTI) %>% 
+  count() / rwEYSTI %>% filter(species == "ACRU") %>% dplyr::select(rwEYSTI) %>% count() 
 
 # mean radial growth in Quebec -------------------------------------------------
 # included sites: BG   - 62-131
 #                 SP   - 132-158
 #                 MFFP - 248:267
 Quebec <- rwEYST %>% filter(site %in% c(62:158, 248:267))
-Quebec %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
-Quebec %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
-Quebec %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
-Quebec %>% select(rwEYST) %>% count()
-rwEYSTI %>% filter(site %in% c(62:158, 248:267)) %>% select(rwEYSTI) %>% count()
+Quebec %>% dplyr::select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+Quebec %>% dplyr::select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+Quebec %>% dplyr::select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+Quebec %>% dplyr::select(rwEYST) %>% count()
+rwEYSTI %>% filter(site %in% c(62:158, 248:267)) %>% dplyr::select(rwEYSTI) %>% count()
 
 # Sugar maple ------------------------------------------------------------------
-Quebec %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
-Quebec %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
-Quebec %>% filter (species == "ACSA") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
-Quebec %>% filter (species == "ACSA") %>% select(rwEYST) %>% count()
-rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% select(rwEYSTI) %>% count()
-rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% select(rwEYSTI) %>% filter (rwEYSTI == 0) %>% count() / 
-rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% select(rwEYSTI) %>% count()
+Quebec %>% filter (species == "ACSA") %>% dplyr::select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACSA") %>% dplyr::select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACSA") %>% dplyr::select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACSA") %>% dplyr::select(rwEYST) %>% count()
+rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% dplyr::select(rwEYSTI) %>% count()
+rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% dplyr::select(rwEYSTI) %>% filter (rwEYSTI == 0) %>% count() / 
+rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACSA") %>% dplyr::select(rwEYSTI) %>% count()
 
 # Red maple --------------------------------------------------------------------
-Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
-Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
-Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
-Quebec %>% filter (species == "ACRU") %>% select(rwEYST) %>% count()
-rwEYSTI %>% filter (species == "ACRU", site %in% c(62:158, 248:267)) %>% select(rwEYSTI) %>% count()
-rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACRU") %>% select(rwEYSTI) %>% filter (rwEYSTI == 0) %>% count() / 
-  rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACRU") %>% select(rwEYSTI) %>% count()
+Quebec %>% filter (species == "ACRU") %>% dplyr::select(rwEYST) %>% unlist() %>% mean(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACRU") %>% dplyr::select(rwEYST) %>% unlist() %>% sd(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACRU") %>% dplyr::select(rwEYST) %>% unlist() %>% range(., na.rm = TRUE) 
+Quebec %>% filter (species == "ACRU") %>% dplyr::select(rwEYST) %>% count()
+rwEYSTI %>% filter (species == "ACRU", site %in% c(62:158, 248:267)) %>% dplyr::select(rwEYSTI) %>% count()
+rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACRU") %>% dplyr::select(rwEYSTI) %>% filter (rwEYSTI == 0) %>% count() / 
+  rwEYSTI%>% filter(site %in% c(62:158, 248:267), species == "ACRU") %>% dplyr::select(rwEYSTI) %>% count()
 
-# delete data before 1900 (no climate data avaiable)
-#-------------------------------------------------------------------------------
+# delete data before 1900 (no climate data avaiable) ---------------------------
 rwEYST <- rwEYST %>% filter (year >= 1900)
 
+# write file with ring widths --------------------------------------------------
+write_csv(rwEYST, file = '../data/growth/chronologyData/RW_all_sites_1900-2020.csv')
+
 # clean up ---------------------------------------------------------------------
-rm (i, fPath, filename, PLOT, VERBOSE)
+rm (i, fPath, filename, PLOT, VERBOSE, Quebec, tempData)
 #===============================================================================
